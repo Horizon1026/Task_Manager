@@ -1,0 +1,21 @@
+# Dependencies and local Node.js runtime
+node_modules/
+.runtime/
+
+# Build and test output
+dist/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Environment-specific configuration
+.env
+.env.*
+!.env.example
+
+# Logs and OS/editor files
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
