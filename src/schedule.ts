@@ -46,10 +46,26 @@ export function durationBetween(start: number, end: number, task: Task, calendar
 export function scheduleProject(input: Project): Map<string, Scheduled> {
   const p = validateProject(input), calendar = makeCalendar(p);
   const tasks = new Map(p.tasks.map(t => [t.uid, t]));
+  const children = new Map<string, string[]>();
+  for (const task of p.tasks) if (task.parent_uid !== null) {
+    const value = children.get(task.parent_uid) ?? [];
+    value.push(task.uid); children.set(task.parent_uid, value);
+  }
   const result = new Map<string, Scheduled>();
   function schedule(uid: string): Scheduled {
     const previous = result.get(uid); if (previous) return previous;
     const task = tasks.get(uid)!;
+    const childIds = children.get(uid);
+    if (childIds?.length) {
+      const childSchedules = childIds.map(schedule);
+      const end = Math.max(...childSchedules.map(value => value.end));
+      const value: Scheduled = {
+        start: Math.min(...childSchedules.map(value => value.start)), end, dependencyFloor: -Infinity,
+        late: task.latest_finish !== null && end > toSlot(task.latest_finish) + 1,
+        unknownYears: [...new Set(childSchedules.flatMap(value => value.unknownYears))].sort(),
+      };
+      result.set(uid, value); return value;
+    }
     const dependencyFloor = task.dependencies.reduce((latest, dep) => Math.max(latest, schedule(dep).end), -Infinity);
     const earliest = toSlot(task.earliest_start ?? { date: p.project.start_date, period: 'am' });
     const constraint = Math.max(earliest, dependencyFloor);
@@ -83,5 +99,22 @@ export function moveTask(project: Project, uid: string, targetOrder: number): Pr
   if (index < 0) throw new Error('任务不存在');
   const [task] = ordered.splice(index, 1);
   ordered.splice(Math.max(0, Math.min(ordered.length, targetOrder - 1)), 0, task);
-  return { ...project, tasks: ordered.map((t, i) => ({ ...t, order: i + 1 })) };
+  return normalizeTreeOrder({ ...project, tasks: ordered.map((t, i) => ({ ...t, order: i + 1 })) });
+}
+
+/** Keep each subtree contiguous while preserving the current order among siblings. */
+export function normalizeTreeOrder(project: Project): Project {
+  const children = new Map<string | null, Task[]>();
+  for (const task of project.tasks) {
+    const value = children.get(task.parent_uid) ?? [];
+    value.push(task); children.set(task.parent_uid, value);
+  }
+  const ordered: Task[] = [];
+  function visit(parent: string | null) {
+    for (const task of (children.get(parent) ?? []).sort((a, b) => a.order - b.order)) {
+      ordered.push(task); visit(task.uid);
+    }
+  }
+  visit(null);
+  return { ...project, tasks: ordered.map((task, order) => ({ ...task, order: order + 1 })) };
 }

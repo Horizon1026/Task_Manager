@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, type Snapshot } from './api';
 import { scaleNames, scales, statuses, validateProject, type Project, type Scale, type Task } from './model';
-import { moveTask, scheduleProject } from './schedule';
+import { moveTask, normalizeTreeOrder, scheduleProject } from './schedule';
 import { Gantt } from './Gantt';
 import { TaskEditor } from './TaskEditor';
 import { CalendarPanel } from './CalendarPanel';
@@ -63,6 +63,14 @@ export function App() {
   }, [save]);
   function updateTask(task: Task) { setProject(p => p && { ...p, tasks: p.tasks.map(t => t.uid === task.uid ? task : t) }); }
   function reorder(uid: string, order: number) { setProject(p => p && moveTask(p, uid, order)); }
+  function updateParent(uid: string, parent_uid: string | null) {
+    if (!project) return;
+    try {
+      const next = normalizeTreeOrder({ ...project, tasks: project.tasks.map(task => task.uid === uid ? { ...task, parent_uid } : task) });
+      validateProject(next); setProject(next);
+      setMessage(parent_uid === null ? '已设为根任务。请保存并备份。' : '父任务已更新，父任务排期将自动汇总。请保存并备份。');
+    } catch (error) { setMessage((error as Error).message); }
+  }
   function addDependency(from: string, to: string) {
     if (!project) return;
     try {
@@ -74,12 +82,14 @@ export function App() {
   }
   function addTask() {
     if (!project) return;
-    const task: Task = { uid: crypto.randomUUID(), order: project.tasks.length + 1, name: '新任务', description: '', assignee: '', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, dependencies: [], labels: [], allow_rest_day_work: false };
+    const task: Task = { uid: crypto.randomUUID(), order: project.tasks.length + 1, name: '新任务', description: '', assignee: '', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, parent_uid: null, dependencies: [], labels: [], allow_rest_day_work: false };
     setProject({ ...project, tasks: [...project.tasks, task] }); setSelected(task.uid);
   }
   function removeTask() {
     if (!project || !selected) return;
     const dependents = project.tasks.filter(t => t.dependencies.includes(selected));
+    const children = project.tasks.filter(t => t.parent_uid === selected);
+    if (children.length) return setMessage(`不能删除：${children.map(t => t.name).join('、')} 仍是其子任务。请先将子任务设为根任务或重新指定父任务。`);
     if (dependents.length) return setMessage(`不能删除：${dependents.map(t => t.name).join('、')} 仍依赖此任务。请先解除依赖。`);
     if (!confirm('删除此任务？修改将在保存并备份后写入文件。')) return;
     setProject({ ...project, tasks: project.tasks.filter(t => t.uid !== selected).sort((a, b) => a.order - b.order).map((t, i) => ({ ...t, order: i + 1 })) }); setSelected(null);
@@ -119,7 +129,7 @@ export function App() {
           <Gantt project={project} schedule={calculated.schedule} scale={scale} selected={selected} filter={filter} onSelect={setSelected} onChange={updateTask} onOrder={reorder} onDependency={addDependency} notify={setMessage} />
           <div className="board-footer"><div className="legend">{statuses.map((s, i) => <span key={s}><i className={`status-${i}`} />{s}</span>)}<span><i className="late-key" />超期</span></div><span>未匹配任务保留原行 · 选中任务显示依赖连线</span></div>
         </section>
-        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} project={project} scheduled={calculated.schedule.get(task.uid)} onChange={updateTask} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onDelete={removeTask} onClose={() => setSelected(null)} />}
+        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} project={project} scheduled={calculated.schedule.get(task.uid)} onChange={updateTask} onParentChange={parent_uid => updateParent(task.uid, parent_uid)} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onDelete={removeTask} onClose={() => setSelected(null)} />}
       </fieldset>
       <footer className="app-footer"><span className="mono" title={snapshot?.file}>{snapshot?.file}</span><span>本地优先 · YAML 数据源 · v0.1</span></footer>
     </main>

@@ -15,6 +15,8 @@ export const taskSchema = z.object({
   status: z.enum(statuses),
   earliest_start: momentSchema.nullable(), latest_finish: momentSchema.nullable(),
   duration_days: z.number().min(0.5).max(36500).multipleOf(0.5),
+  // Optional on input for backward-compatible loading of existing project snapshots.
+  parent_uid: z.string().min(1).max(100).nullable().default(null),
   dependencies: z.array(z.string()).max(5000), labels: z.array(z.string().min(1).max(100)).max(100),
   allow_rest_day_work: z.boolean(),
 }).strict();
@@ -47,6 +49,21 @@ export type HalfDay = z.infer<typeof momentSchema>;
 export type CalendarYear = z.infer<typeof yearSchema>;
 export type Scale = typeof scales[number];
 
+export function descendantUids(project: Project, uid: string): Set<string> {
+  const children = new Map<string, string[]>();
+  for (const task of project.tasks) if (task.parent_uid !== null) {
+    const value = children.get(task.parent_uid) ?? [];
+    value.push(task.uid); children.set(task.parent_uid, value);
+  }
+  const result = new Set<string>(), pending = [...(children.get(uid) ?? [])];
+  while (pending.length) {
+    const child = pending.pop()!;
+    if (result.has(child)) continue;
+    result.add(child); pending.push(...(children.get(child) ?? []));
+  }
+  return result;
+}
+
 export function validateProject(input: unknown): Project {
   const parsed = projectSchema.safeParse(input);
   if (!parsed.success) throw new Error(parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n'));
@@ -57,6 +74,22 @@ export function validateProject(input: unknown): Project {
   if (orders.some((n, i) => n !== i + 1)) throw new Error('任务排序 ID 必须是从 1 开始的连续整数');
   if (new Set(p.calendar.years.map(y => y.year)).size !== p.calendar.years.length) throw new Error('日历年份重复');
   if (new Set(p.calendar.overrides.map(o => o.date)).size !== p.calendar.overrides.length) throw new Error('日历修正日期重复');
+  const children = new Set(p.tasks.flatMap(t => t.parent_uid ? [t.parent_uid] : []));
+  for (const task of p.tasks) {
+    if (task.parent_uid === null) continue;
+    if (task.parent_uid === task.uid) throw new Error(`任务「${task.name}」不能作为自身的父任务`);
+    if (!map.has(task.parent_uid)) throw new Error(`任务「${task.name}」的父任务不存在：${task.parent_uid}`);
+  }
+  for (const task of p.tasks) {
+    const seen = new Set<string>([task.uid]);
+    let parent = task.parent_uid;
+    while (parent !== null) {
+      if (seen.has(parent)) throw new Error(`存在循环父子关系：${task.name}`);
+      seen.add(parent); parent = map.get(parent)!.parent_uid;
+    }
+    if (children.has(task.uid) && task.dependencies.length) throw new Error(`父任务「${task.name}」不能设置前置依赖；请为叶子任务设置依赖`);
+    for (const dependency of task.dependencies) if (children.has(dependency)) throw new Error(`任务「${task.name}」不能依赖父任务：${dependency}`);
+  }
   const visited = new Set<string>();
   const visiting = new Set<string>();
   function visit(uid: string) {

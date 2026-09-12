@@ -1,0 +1,90 @@
+version: 1
+project:
+  name: MissionManager 示例项目
+  start_date: 2026-09-14
+  default_scale: week
+  default_filter:
+    labels: []
+    mode: or
+calendar:
+  years: []
+  overrides: []
+tasks:
+  - uid: task-discovery
+    order: 1
+    name: 需求梳理
+    description: 确认任务字段和半天排期规则。
+    assignee: 小林
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1.5
+    parent_uid: null
+    dependencies: []
+    labels: [规划]
+    allow_rest_day_work: false
+  - uid: task-design
+    order: 2
+    name: 交互与视觉设计
+    description: 设计任务时间轴和本地日历。
+    assignee: 小陈
+    status: 验收中
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: null
+    dependencies: [task-discovery]
+    labels: [设计]
+    allow_rest_day_work: false
+  - uid: task-engine
+    order: 3
+    name: 半天排期引擎
+    description: 支持依赖计算和超期预警。
+    assignee: 小林
+    status: 进行中
+    earliest_start: null
+    latest_finish: { date: 2026-09-17, period: pm }
+    duration_days: 4
+    parent_uid: null
+    dependencies: [task-discovery]
+    labels: [开发, 核心]
+    allow_rest_day_work: false
+  - uid: task-gantt
+    order: 4
+    name: 甘特图与任务编辑
+    description: 拖动任务改变开始约束和耗时。
+    assignee: 小陈
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2.5
+    parent_uid: null
+    dependencies: [task-design, task-engine]
+    labels: [开发, 界面]
+    allow_rest_day_work: false
+  - uid: task-qa
+    order: 5
+    name: 联合功能测试
+    description: 验证保存、日历和筛选。
+    assignee: 你
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: null
+    dependencies: [task-gantt]
+    labels: [测试]
+    allow_rest_day_work: false
+  - uid: task-release
+    order: 6
+    name: 第一版交付
+    description: 整理测试反馈并交付。
+    assignee: 小林
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: null
+    dependencies: [task-qa]
+    labels: [交付]
+    allow_rest_day_work: true

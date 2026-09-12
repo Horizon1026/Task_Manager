@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProject } from '../src/model';
-import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveTask, scheduleProject, toSlot } from '../src/schedule';
+import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveTask, normalizeTreeOrder, scheduleProject, toSlot } from '../src/schedule';
 import { alignStart, timeColumns } from '../src/timeline';
 import { project, task } from './fixtures';
 
@@ -58,10 +58,34 @@ test('deadline includes its half-day; only later completion warns', () => {
 test('missing years are flagged and completed status does not change scheduling', () => {
   assert.deepEqual(scheduleProject(project([task('a', { status: '已完成' })])).get('a')!.unknownYears, [2026]);
 });
+test('parent task automatically rolls up nested leaf task schedules', () => {
+  const p = project([
+    task('parent', { duration_days: 9, latest_finish: { date: '2026-09-16', period: 'pm' } }),
+    task('group', { parent_uid: 'parent', duration_days: 8 }),
+    task('first', { parent_uid: 'group', duration_days: 1 }),
+    task('second', { parent_uid: 'group', earliest_start: { date: '2026-09-16', period: 'pm' }, duration_days: 1 }),
+  ]);
+  const schedule = scheduleProject(p);
+  assert.equal(formatSlot(schedule.get('group')!.start), '2026-09-14 上午');
+  assert.equal(formatSlot(schedule.get('group')!.end - 1), '2026-09-17 上午');
+  assert.equal(schedule.get('parent')!.start, schedule.get('group')!.start);
+  assert.equal(schedule.get('parent')!.end, schedule.get('group')!.end);
+  assert.equal(schedule.get('parent')!.late, true);
+});
 test('moving rows preserves UIDs and dependencies, reindexes and sorts YAML order', () => {
   const p = moveTask(project([task('a'), task('b', { dependencies: ['a'] })]), 'b', 1);
   assert.deepEqual(p.tasks.map(t => [t.uid, t.order]), [['b', 1], ['a', 2]]);
   assert.deepEqual(p.tasks[0].dependencies, ['a']); validateProject(p);
+});
+test('tree order keeps each parent subtree contiguous while preserving sibling order', () => {
+  const p = project([
+    task('root-b', { order: 1 }), task('child-b', { order: 2, parent_uid: 'root-a' }),
+    task('root-a', { order: 3 }), task('grandchild', { order: 4, parent_uid: 'child-b' }),
+    task('child-a', { order: 5, parent_uid: 'root-a' }),
+  ]);
+  const ordered = normalizeTreeOrder(p);
+  assert.deepEqual(ordered.tasks.map(task => task.uid), ['root-b', 'root-a', 'child-b', 'grandchild', 'child-a']);
+  assert.deepEqual(ordered.tasks.map(task => task.order), [1, 2, 3, 4, 5]);
 });
 test('rejects self-dependencies, cycles, dangling references, duplicate UIDs and order', () => {
   assert.throws(() => validateProject(project([task('a', { dependencies: ['a'] })])), /循环/);
@@ -69,6 +93,13 @@ test('rejects self-dependencies, cycles, dangling references, duplicate UIDs and
   assert.throws(() => validateProject(project([task('a', { dependencies: ['missing'] })])), /不存在/);
   assert.throws(() => validateProject(project([task('a'), task('a')])), /UID 重复/);
   const p = project(); p.tasks[0].order = 2; assert.throws(() => validateProject(p), /排序/);
+});
+test('parent UID forms an acyclic forest and only leaves can have dependencies', () => {
+  assert.throws(() => validateProject(project([task('a', { parent_uid: 'a' })])), /自身的父任务/);
+  assert.throws(() => validateProject(project([task('a', { parent_uid: 'missing' })])), /父任务不存在/);
+  assert.throws(() => validateProject(project([task('a', { parent_uid: 'b' }), task('b', { parent_uid: 'a' })])), /循环父子关系/);
+  assert.throws(() => validateProject(project([task('parent', { dependencies: ['leaf'] }), task('leaf', { parent_uid: 'parent' })])), /父任务.*前置依赖/);
+  assert.throws(() => validateProject(project([task('parent'), task('leaf', { parent_uid: 'parent', dependencies: ['parent'] })])), /不能依赖父任务/);
 });
 test('rejects invalid dates and duration without treating impossible deadlines as invalid', () => {
   assert.throws(() => validateProject(project([task('a', { duration_days: 0.7 })])));

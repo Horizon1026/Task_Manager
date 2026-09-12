@@ -1,11 +1,11 @@
 version: 1
 project:
-  name: MissionManager 示例项目
+  name: Aurora 平台交付示例
   start_date: 2026-09-14
   default_scale: week
   default_filter:
     labels: []
-    mode: or
+    mode: and
 calendar:
   years:
     - year: 2026
@@ -131,95 +131,285 @@ calendar:
         - date: 2026-10-10
           name: 国庆节
           isOffDay: false
-  overrides: []
+  overrides:
+    - date: 2026-09-18
+      is_workday: false
+      note: 团队团建日
+    - date: 2026-09-27
+      is_workday: true
+      note: 发布冲刺补班
 tasks:
-  - uid: task-discovery
+  -
+    uid: product-release
     order: 1
-    name: 需求梳理
-    description: 确认第一版的任务字段、依赖关系和半天排期规则。
-    assignee: 小林
-    status: 已完成
-    earliest_start:
-      date: 2026-09-14
-      period: am
+    name: Aurora 平台第一版
+    description: 汇总产品规划、设计、研发和验证的一级交付容器。
+    assignee: 产品委员会
+    status: 进行中
+    earliest_start: null
     latest_finish: null
-    duration_days: 2.5
+    duration_days: 0.5
+    parent_uid: null
     dependencies: []
-    labels:
-      - 规划
+    labels: [核心, 发布]
     allow_rest_day_work: false
-  - uid: task-design
+  - uid: discovery-phase
     order: 2
-    name: 交互与视觉设计
-    description: 设计任务时间轴、悬浮详情和本地日历。
-    assignee: 小陈
+    name: 需求与范围
+    description: 明确目标用户、范围和验收边界。
+    assignee: 林晓
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: product-release
+    dependencies: []
+    labels: [规划]
+    allow_rest_day_work: false
+  - uid: user-research
+    order: 3
+    name: 用户访谈与竞品调研
+    description: 完成访谈纪要并输出机会点清单。
+    assignee: 林晓
+    status: 已完成
+    earliest_start: { date: 2026-09-14, period: am }
+    latest_finish: { date: 2026-09-15, period: pm }
+    duration_days: 1.5
+    parent_uid: discovery-phase
+    dependencies: []
+    labels: [规划, 调研]
+    allow_rest_day_work: false
+  - uid: scope-baseline
+    order: 4
+    name: 范围基线与验收标准
+    description: 形成冻结的 MVP 范围和可测试验收条目。
+    assignee: 林晓
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: discovery-phase
+    dependencies: [user-research]
+    labels: [规划, 核心]
+    allow_rest_day_work: false
+  - uid: design-phase
+    order: 5
+    name: 体验与视觉设计
+    description: 包含信息架构、交互原型和视觉规范。
+    assignee: 陈雨
     status: 验收中
     earliest_start: null
     latest_finish: null
-    duration_days: 2
-    dependencies:
-      - task-discovery
-    labels:
-      - 设计
+    duration_days: 0.5
+    parent_uid: product-release
+    dependencies: []
+    labels: [设计]
     allow_rest_day_work: false
-  - uid: task-engine
-    order: 3
-    name: 半天排期引擎
-    description: 支持依赖计算、休息日跳过，以及超期预警。
-    assignee: 小林
-    status: 进行中
+  - uid: ux-flow
+    order: 6
+    name: 信息架构与交互原型
+    description: 覆盖关键流程、空状态和异常路径。
+    assignee: 陈雨
+    status: 验收中
     earliest_start: null
-    latest_finish:
-      date: 2026-09-17
-      period: pm
-    duration_days: 4
-    dependencies:
-      - task-discovery
-    labels:
-      - 开发
-      - 核心
+    latest_finish: { date: 2026-09-18, period: pm }
+    duration_days: 2
+    parent_uid: design-phase
+    dependencies: [scope-baseline]
+    labels: [设计, 核心]
     allow_rest_day_work: false
-  - uid: task-gantt
-    order: 4
-    name: 甘特图与任务编辑
-    description: 拖动任务改变开始约束和耗时，右键拖动添加依赖。
-    assignee: 小陈
+  - uid: visual-spec
+    order: 7
+    name: 视觉规范与切图
+    description: 交付组件状态、色彩和响应式标注。
+    assignee: 陈雨
     status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 2.5
-    dependencies:
-      - task-design
-      - task-engine
-    labels:
-      - 开发
-      - 界面
+    duration_days: 1.5
+    parent_uid: design-phase
+    dependencies: [ux-flow]
+    labels: [设计, 界面]
     allow_rest_day_work: false
-  - uid: task-qa
-    order: 5
-    name: 联合功能测试
-    description: 验证保存备份、外部文件刷新、日历修正和标签筛选。
+  - uid: engineering-phase
+    order: 8
+    name: 工程实现
+    description: 研发一级容器，自动汇总基础、功能和集成任务。
+    assignee: 周哲
+    status: 进行中
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: product-release
+    dependencies: []
+    labels: [开发, 核心]
+    allow_rest_day_work: false
+  - uid: foundation-phase
+    order: 9
+    name: 技术基础
+    description: 架构与数据层设计。
+    assignee: 周哲
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: engineering-phase
+    dependencies: []
+    labels: [开发, 基础]
+    allow_rest_day_work: false
+  - uid: architecture
+    order: 10
+    name: 系统架构评审
+    description: 完成服务边界、接口原则和风险评审。
+    assignee: 周哲
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: foundation-phase
+    dependencies: [scope-baseline]
+    labels: [开发, 架构]
+    allow_rest_day_work: false
+  - uid: schema
+    order: 11
+    name: 数据模型与迁移脚本
+    description: 创建核心表、索引及可回滚迁移。
+    assignee: 王宁
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1.5
+    parent_uid: foundation-phase
+    dependencies: [architecture]
+    labels: [开发, 数据]
+    allow_rest_day_work: false
+  - uid: delivery-phase
+    order: 12
+    name: 功能开发与集成
+    description: API、Web 客户端和联调的二级容器。
+    assignee: 周哲
+    status: 进行中
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: engineering-phase
+    dependencies: []
+    labels: [开发]
+    allow_rest_day_work: false
+  - uid: api-service
+    order: 13
+    name: API 服务实现
+    description: 实现鉴权、项目数据和日历接口。
+    assignee: 王宁
+    status: 进行中
+    earliest_start: null
+    latest_finish: { date: 2026-09-24, period: pm }
+    duration_days: 3
+    parent_uid: delivery-phase
+    dependencies: [schema]
+    labels: [开发, 后端, 核心]
+    allow_rest_day_work: false
+  - uid: web-client
+    order: 14
+    name: Web 客户端实现
+    description: 实现任务树编辑、筛选和响应式界面。
+    assignee: 赵敏
+    status: 进行中
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3.5
+    parent_uid: delivery-phase
+    dependencies: [api-service, visual-spec]
+    labels: [开发, 前端, 界面]
+    allow_rest_day_work: false
+  - uid: integration
+    order: 15
+    name: 端到端联调
+    description: 处理跨端数据、错误状态和关键用户路径。
+    assignee: 周哲
+    status: 未开始
+    earliest_start: null
+    latest_finish: { date: 2026-09-30, period: am }
+    duration_days: 2
+    parent_uid: delivery-phase
+    dependencies: [api-service, web-client]
+    labels: [开发, 联调]
+    allow_rest_day_work: false
+  - uid: validation-phase
+    order: 16
+    name: 质量验证与交付
+    description: 自动汇总测试、文档和发布准备。
+    assignee: 你
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: product-release
+    dependencies: []
+    labels: [测试, 发布]
+    allow_rest_day_work: false
+  - uid: qa-regression
+    order: 17
+    name: 回归测试与可访问性检查
+    description: 执行桌面、移动端和键盘可访问性测试。
     assignee: 你
     status: 未开始
     earliest_start: null
     latest_finish: null
     duration_days: 2
-    dependencies:
-      - task-gantt
-    labels:
-      - 测试
+    parent_uid: validation-phase
+    dependencies: [integration]
+    labels: [测试, 质量]
     allow_rest_day_work: false
-  - uid: task-release
-    order: 6
-    name: 第一版交付
-    description: 整理测试反馈，确认可以开始管理真实项目。
-    assignee: 小林
+  - uid: release-notes
+    order: 18
+    name: 发布说明与运行手册
+    description: 整理变更、已知问题、回滚步骤和支持渠道。
+    assignee: 林晓
     status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 4
-    dependencies:
-      - task-qa
-    labels:
-      - 交付
+    duration_days: 1
+    parent_uid: validation-phase
+    dependencies: [qa-regression]
+    labels: [文档, 发布]
+    allow_rest_day_work: false
+  - uid: operations-phase
+    order: 19
+    name: 上线与后续运营
+    description: 第二个根任务，演示跨根任务依赖和跨年日历提示。
+    assignee: 运营组
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: null
+    dependencies: []
+    labels: [发布, 运营]
+    allow_rest_day_work: false
+  - uid: launch-window
+    order: 20
+    name: 国庆上线窗口
+    description: 允许在休息日工作，演示法定假日内的发布任务。
+    assignee: 值班小组
+    status: 未开始
+    earliest_start: { date: 2026-10-01, period: am }
+    latest_finish: { date: 2026-10-02, period: pm }
+    duration_days: 1.5
+    parent_uid: operations-phase
+    dependencies: [release-notes]
+    labels: [发布, 值班]
     allow_rest_day_work: true
+  - uid: post-launch-review
+    order: 21
+    name: 跨年复盘与路线图
+    description: 未加载 2027 年官方日历，甘特图会提示该排期暂估。
+    assignee: 产品委员会
+    status: 未开始
+    earliest_start: { date: 2027-01-04, period: am }
+    latest_finish: null
+    duration_days: 1
+    parent_uid: operations-phase
+    dependencies: [launch-window]
+    labels: [运营, 复盘]
+    allow_rest_day_work: false

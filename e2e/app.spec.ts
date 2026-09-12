@@ -4,7 +4,7 @@ import { parse, stringify } from 'yaml';
 
 test.beforeEach(async ({ page, request }) => {
   const data = await (await request.get('/api/project')).json();
-  await writeFile(data.file, await readFile('data/project.yaml', 'utf8'));
+  await writeFile(data.file, await readFile('tests/e2e-project.yaml', 'utf8'));
   await page.goto('/'); await expect(page.getByRole('heading', { name: 'MissionManager 示例项目' })).toBeVisible();
 });
 async function taskDetails(page: Page, name: string) { await page.getByRole('button', { name, exact: false }).filter({ has: page.locator('strong') }).first().click(); }
@@ -12,7 +12,7 @@ test('loads seven scales, colors, muted filtering and read-only UID', async ({ p
   await expect(page.locator('.task-bar')).toHaveCount(6);
   for (const name of ['天', '周', '半月', '月', '季度', '半年', '年']) { await page.getByRole('button', { name, exact: true }).click(); await expect(page.locator('.task-bar')).toHaveCount(6); }
   await page.getByRole('button', { name: '核心', exact: true }).click();
-  await expect(page.locator('.gantt-row')).toHaveCount(6); await expect(page.locator('.muted-row')).toHaveCount(5);
+  await expect(page.locator('.gantt-row')).toHaveCount(6); await expect(page.locator('.gantt-row.muted-row')).toHaveCount(5);
   await taskDetails(page, '半天排期引擎');
   await expect(page.getByLabel('任务 UID')).toHaveAttribute('readonly', '');
   await expect(page.getByLabel('任务详情编辑')).toContainText('超过最迟完成时间');
@@ -52,6 +52,36 @@ test('task CRUD and reorder preserve UID references', async ({ page, request }) 
   const data = await (await request.get('/api/project')).json(); expect(data.project.tasks[5].name).toBe('新增验证'); expect(data.project.tasks[6].dependencies).toEqual(['task-qa']);
   await taskDetails(page, '新增验证'); page.once('dialog', d => d.accept()); await page.getByRole('button', { name: '删除任务', exact: true }).click(); await expect(page.locator('.gantt-row')).toHaveCount(6);
 });
+test('parent selection creates a container, prevents descendant cycles, and persists the tree', async ({ page, request }) => {
+  await page.getByRole('button', { name: '新增任务', exact: false }).click();
+  await page.getByLabel('任务名称', { exact: true }).fill('父级验证任务');
+  const parentUid = await page.getByLabel('任务 UID').inputValue();
+  await page.getByRole('button', { name: '关闭任务详情' }).click();
+  await page.getByRole('button', { name: '新增任务', exact: false }).click();
+  await page.getByLabel('任务名称', { exact: true }).fill('子级验证任务');
+  await page.getByLabel('父任务').selectOption(parentUid);
+  await expect(page.getByRole('status')).toContainText('父任务已更新');
+  await page.getByRole('button', { name: '关闭任务详情' }).click();
+  await taskDetails(page, '父级验证任务');
+  await expect(page.getByLabel('预计耗时（天）')).toBeDisabled();
+  await expect(page.getByRole('button', { name: '删除任务', exact: true })).toBeDisabled();
+  await expect(page.getByLabel('父任务')).not.toContainText('子级验证任务');
+  await page.getByRole('button', { name: '关闭任务详情' }).click();
+  const parentBar = (await page.getByRole('button', { name: '任务条 父级验证任务' }).boundingBox())!;
+  const childBar = (await page.getByRole('button', { name: '任务条 子级验证任务' }).boundingBox())!;
+  const parentLabel = (await page.locator('.gantt-row').filter({ hasText: '父级验证任务' }).boundingBox())!;
+  expect(parentBar.height).toBeGreaterThan(childBar.height);
+  expect(parentLabel.y).toBe(parentBar.y);
+  expect(parentLabel.height).toBe(parentBar.height);
+  expect(childBar.y).toBeGreaterThan(parentBar.y);
+  expect(childBar.y + childBar.height).toBeLessThan(parentBar.y + parentBar.height);
+  await page.getByRole('button', { name: '保存并备份', exact: false }).click();
+  await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
+  const data = await (await request.get('/api/project')).json();
+  const parent = data.project.tasks.find((task: { name: string }) => task.name === '父级验证任务');
+  const child = data.project.tasks.find((task: { name: string }) => task.name === '子级验证任务');
+  expect(child.parent_uid).toBe(parent.uid);
+});
 test('dependency dropdown prevents cycles and allows removing an edge', async ({ page }) => {
   await taskDetails(page, '需求梳理'); await page.getByLabel('选择前置任务').selectOption('task-qa'); await page.getByRole('button', { name: '添加', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('循环依赖');
@@ -59,13 +89,15 @@ test('dependency dropdown prevents cycles and allows removing an edge', async ({
   await page.getByRole('button', { name: '移除依赖 task-discovery' }).click(); await expect(page.locator('.computed')).toContainText('2026-09-14 上午');
 });
 test('mouse drag moves by half-day, right handle changes duration, and blocked dependency drag changes nothing', async ({ page, request }) => {
+  const dataBefore = await (await request.get('/api/project')).json();
+  const initialDuration = dataBefore.project.tasks.find((task: { uid: string }) => task.uid === 'task-discovery').duration_days;
   await page.getByRole('button', { name: '天', exact: true }).click();
   const bar = page.getByTestId('bar-task-discovery'); let box = (await bar.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + 16); await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 + 36, box.y + 16, { steps: 8 }); await page.mouse.up();
   await taskDetails(page, '需求梳理'); await expect(page.getByLabel('最早可开始时间', { exact: true })).toHaveValue('2026-09-14'); await expect(page.getByLabel('最早可开始时间时段')).toHaveValue('pm');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   box = (await bar.boundingBox())!; await page.mouse.move(box.x + box.width - 3, box.y + 16); await page.mouse.down(); await page.mouse.move(box.x + box.width + 33, box.y + 16, { steps: 8 }); await page.mouse.up();
-  await taskDetails(page, '需求梳理'); await expect(page.getByLabel('预计耗时（天）')).toHaveValue('2'); await page.getByRole('button', { name: '关闭任务详情' }).click();
+  await taskDetails(page, '需求梳理'); await expect(page.getByLabel('预计耗时（天）')).toHaveValue(String(initialDuration + 0.5)); await page.getByRole('button', { name: '关闭任务详情' }).click();
   const child = (await page.getByTestId('bar-task-design').boundingBox())!;
   await page.mouse.move(child.x + 20, child.y + 16); await page.mouse.down(); await page.mouse.move(child.x - 80, child.y + 16, { steps: 8 }); await page.mouse.up();
   await expect(page.getByRole('status')).toContainText('已阻止拖动');
