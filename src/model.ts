@@ -3,6 +3,12 @@ import { z } from 'zod';
 export const scales = ['day', 'week', 'half-month', 'month', 'quarter', 'half-year', 'year'] as const;
 export const scaleNames = ['天', '周', '半月', '月', '季度', '半年', '年'];
 export const statuses = ['未开始', '进行中', '验收中', '已完成'] as const;
+export const defaultStatusColors = {
+  '未开始': { fill: '#dfe9e2', border: '#c8d8cb', text: '#647c69' },
+  '进行中': { fill: '#bce0d5', border: '#92c7b7', text: '#2a7361' },
+  '验收中': { fill: '#e5ddf4', border: '#d0bfe7', text: '#8264a3' },
+  '已完成': { fill: '#d4e3f5', border: '#b9cfe9', text: '#567ba2' },
+} as const;
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(s => {
   const time = Date.parse(s + 'T00:00:00Z');
   return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === s && s >= '1900-01-01' && s <= '2199-12-31';
@@ -21,6 +27,11 @@ export const taskSchema = z.object({
   allow_rest_day_work: z.boolean(),
 }).strict();
 const holiday = z.object({ date, name: z.string(), isOffDay: z.boolean() }).strict();
+const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, '颜色必须为 #RRGGBB 格式');
+const statusColor = z.object({ fill: color, border: color, text: color }).strict();
+const statusColors = z.object({
+  '未开始': statusColor, '进行中': statusColor, '验收中': statusColor, '已完成': statusColor,
+}).strict().default(defaultStatusColors);
 export const yearSchema = z.object({
   year: z.number().int().min(1900).max(2199),
   source: z.string(), fetched_at: z.string(), papers: z.array(z.string()),
@@ -36,6 +47,7 @@ export const projectSchema = z.object({
     name: z.string().trim().min(1).max(200), start_date: date,
     default_scale: z.enum(scales),
     default_filter: z.object({ labels: z.array(z.string()), mode: z.enum(['and', 'or']) }).strict(),
+    status_colors: statusColors,
   }).strict(),
   calendar: z.object({
     years: z.array(yearSchema),

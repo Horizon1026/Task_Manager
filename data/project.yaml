@@ -6,6 +6,11 @@ project:
   default_filter:
     labels: []
     mode: and
+  status_colors:
+    未开始: { fill: "#dfe9e2", border: "#c8d8cb", text: "#647c69" }
+    进行中: { fill: "#bce0d5", border: "#92c7b7", text: "#2a7361" }
+    验收中: { fill: "#e5ddf4", border: "#d0bfe7", text: "#8264a3" }
+    已完成: { fill: "#d4e3f5", border: "#b9cfe9", text: "#567ba2" }
 calendar:
   years:
     - year: 2026

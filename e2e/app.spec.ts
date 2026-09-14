@@ -38,6 +38,33 @@ test('freezes and resizes the left task list', async ({ page }) => {
   await expect(page.locator('.task-heading')).toHaveCSS('width', '340px');
   await expect(taskList).toHaveCSS('width', '340px');
 });
+test('blank Gantt canvas closes task details and supports horizontal panning', async ({ page }) => {
+  await page.getByTestId('bar-task-discovery').click();
+  await expect(page.getByLabel('任务详情编辑')).toBeVisible();
+  const handle = page.getByRole('separator', { name: '调整任务列表宽度' });
+  const handleBox = (await handle.boundingBox())!;
+  await page.mouse.move(handleBox.x, handleBox.y + handleBox.height / 2);
+  await page.mouse.down(); await page.mouse.move(handleBox.x + 120, handleBox.y + handleBox.height / 2, { steps: 6 }); await page.mouse.up();
+  const body = page.locator('.gantt-body');
+  const blank = await body.evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    for (let y = rect.top + 6; y < rect.bottom - 6; y += 8) for (let x = rect.left + 320; x < rect.right - 20; x += 32) {
+      const target = document.elementFromPoint(x, y) as HTMLElement | null;
+      if (target && !target.closest('[data-task-uid], .tree-task-labels, .hover-card, .editor')) return { x, y };
+    }
+    return null;
+  });
+  expect(blank).not.toBeNull();
+  await page.mouse.click(blank!.x, blank!.y);
+  await expect(page.getByLabel('任务详情编辑')).toHaveCount(0);
+
+  const scroll = page.locator('.gantt-scroll');
+  await expect(scroll).toHaveCSS('overflow-y', 'hidden');
+  expect(await scroll.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
+  await page.mouse.move(blank!.x, blank!.y);
+  await page.mouse.down(); await page.mouse.move(blank!.x - 120, blank!.y, { steps: 6 }); await page.mouse.up();
+  await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+});
 test('edits are drafts; Ctrl+S saves edited content and matching backup', async ({ page, request }) => {
   await taskDetails(page, '需求梳理'); await page.getByLabel('任务名称', { exact: true }).fill('浏览器测试任务');
   await expect(page.getByTestId('save-state')).toContainText('未保存');

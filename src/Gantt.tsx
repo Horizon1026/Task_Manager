@@ -7,7 +7,7 @@ import './tree.css';
 import './ganttOverrides.css';
 
 type Drag = { uid: string; mode: 'move' | 'start' | 'end' | 'dependency'; x: number; y: number; dx: number; dy: number; moved: boolean };
-type Props = { project: Project; schedule: Map<string, Scheduled>; scale: Scale; selected: string | null; filter: { labels: string[]; mode: 'and' | 'or' }; onSelect: (uid: string) => void; onChange: (task: Task) => void; onOrder: (uid: string, order: number) => void; onDependency: (from: string, to: string) => void; notify: (message: string) => void };
+type Props = { project: Project; schedule: Map<string, Scheduled>; scale: Scale; selected: string | null; filter: { labels: string[]; mode: 'and' | 'or' }; onSelect: (uid: string | null) => void; onChange: (task: Task) => void; onOrder: (uid: string, order: number) => void; onDependency: (from: string, to: string) => void; notify: (message: string) => void };
 const LIST_ROW_HEIGHT = 38;
 const LIST_ROW_GAP = 4;
 
@@ -23,7 +23,7 @@ export function Gantt({ project, schedule, scale, selected, filter, onSelect, on
   const [hover, setHover] = useState<{ uid: string; x: number; y: number } | null>(null);
   const [taskListWidth, setTaskListWidth] = useState(260);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const dragRef = useRef<Drag | null>(null), resizeRef = useRef<{ x: number; width: number } | null>(null), skipClick = useRef(false), scroll = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<Drag | null>(null), resizeRef = useRef<{ x: number; width: number } | null>(null), panRef = useRef<{ x: number; scrollLeft: number } | null>(null), skipClick = useRef(false), scroll = useRef<HTMLDivElement>(null);
   const x = (slot: number) => (slot - origin * 2) * pps;
   const isParent = (task: Task) => project.tasks.some(value => value.parent_uid === task.uid);
   const matches = (task: Task) => !filter.labels.length || (filter.mode === 'and' ? filter.labels.every(label => task.labels.includes(label)) : filter.labels.some(label => task.labels.includes(label)));
@@ -69,9 +69,22 @@ export function Gantt({ project, schedule, scale, selected, filter, onSelect, on
     resizeRef.current = null;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
+  function beginPan(e: ReactPointerEvent<HTMLDivElement>) {
+    if (e.button !== 0 || (e.target as HTMLElement).closest('[data-task-uid], button, .task-list-resize-handle, .tree-task-labels')) return;
+    panRef.current = { x: e.clientX, scrollLeft: e.currentTarget.scrollLeft };
+    onSelect(null); e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault();
+  }
+  function pan(e: ReactPointerEvent<HTMLDivElement>) {
+    const start = panRef.current;
+    if (start && scroll.current) scroll.current.scrollLeft = start.scrollLeft - (e.clientX - start.x);
+  }
+  function finishPan(e: ReactPointerEvent<HTMLDivElement>) {
+    panRef.current = null;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  }
   return <div className="gantt-section">
     <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>拖动叶子任务调整排期 · 右键拖动添加依赖 · 点击任务编辑</span><button onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div>
-    <div className="gantt-scroll" ref={scroll} onScroll={e => setScrollLeft(e.currentTarget.scrollLeft)} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
+    <div className="gantt-scroll" ref={scroll} onPointerDown={beginPan} onPointerMove={pan} onPointerUp={finishPan} onPointerCancel={finishPan} onScroll={e => setScrollLeft(e.currentTarget.scrollLeft)} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
       <div className="gantt-header"><div className="task-heading" style={{ width: taskListWidth, minWidth: taskListWidth }}>任务 / 执行人<span>{tasks.length} 条</span><span role="separator" aria-label="调整任务列表宽度" aria-orientation="vertical" className="task-list-resize-handle" onPointerDown={beginListResize} onPointerMove={resizeList} onPointerUp={finishListResize} onPointerCancel={finishListResize} /></div><div className="time-heading" style={{ width }}>{columns.map(column => <div key={column.start} style={{ left: (column.start - origin) * ppd, width: (column.end - column.start) * ppd }}>{column.label}{scale === 'day' && <small>上午　下午</small>}</div>)}</div></div>
       <div className="gantt-body tree-gantt-body" style={{ minHeight: height }}>
         <div className="time-background" style={{ left: taskListWidth, width, backgroundSize: `${ppd}px 100%` }}>{ppd >= 3 && end - origin <= 5000 && Array.from({ length: Math.ceil(end - origin) }, (_, index) => !calendar(dateString(origin + index)).isWorkday && <div className="rest-column" key={index} style={{ left: index * ppd, width: ppd }} />)}{columns.map(column => <div className="period-line" key={column.start} style={{ left: (column.start - origin) * ppd }} />)}<div className="today-line" style={{ left: (dayNumber(todayLocal()) - origin) * ppd }}><span>今天</span></div></div>
@@ -80,7 +93,9 @@ export function Gantt({ project, schedule, scale, selected, filter, onSelect, on
           const task = item.task, scheduled = schedule.get(task.uid), active = drag?.uid === task.uid && drag.mode !== 'dependency', delta = active ? Math.round(drag.dx / pps) : 0;
           const left = scheduled ? x(scheduled.start) + (active && drag.mode !== 'end' ? delta * pps : 0) : 0, barWidth = scheduled ? Math.max(8, (scheduled.end - scheduled.start + (active && drag.mode === 'end' ? delta : 0)) * pps) : 0;
           const blocked = !!scheduled && active && drag.mode !== 'end' && scheduled.start + delta < scheduled.dependencyFloor;
-          return scheduled && <div role="button" tabIndex={0} key={task.uid} data-task-uid={task.uid} data-testid={`bar-${task.uid}`} aria-label={`任务条 ${task.name}`} className={`task-bar ${item.isParent ? 'parent-task-bar' : 'child-task-bar'} status-${['未开始', '进行中', '验收中', '已完成'].indexOf(task.status)} ${scheduled.late ? 'late' : ''} ${blocked ? 'blocked' : ''} ${active ? 'dragging' : ''} ${highlighted.has(task.uid) ? '' : 'muted-row'}`} style={{ left, width: barWidth, top: item.top + (item.isParent ? 4 : 6), height: item.isParent ? Math.max(34, item.height - 8) : 30, zIndex: item.depth + 3 }} onContextMenu={e => e.preventDefault()} onPointerDown={e => begin(e, task, 'move')} onPointerMove={moving} onPointerUp={finish} onPointerCancel={cancel} onClick={() => { if (!skipClick.current) onSelect(task.uid); skipClick.current = false; }} onKeyDown={e => { if (e.key === 'Enter') onSelect(task.uid); if (e.key === 'Escape') cancel(); }} onMouseEnter={e => { if (!dragRef.current && !item.isParent) setHover({ uid: task.uid, x: e.clientX, y: e.clientY }); }} onMouseLeave={() => setHover(null)}><span className="bar-handle left" onPointerDown={e => begin(e, task, 'start')} /><span className="bar-name">{task.name}</span><span className="bar-handle right" onPointerDown={e => begin(e, task, 'end')} /></div>;
+          const color = project.project.status_colors[task.status];
+          const statusStyle = item.isParent ? { borderColor: color.border, color: color.text } : { backgroundColor: color.fill, borderColor: color.border, color: color.text };
+          return scheduled && <div role="button" tabIndex={0} key={task.uid} data-task-uid={task.uid} data-testid={`bar-${task.uid}`} aria-label={`任务条 ${task.name}`} className={`task-bar ${item.isParent ? 'parent-task-bar' : 'child-task-bar'} ${scheduled.late ? 'late' : ''} ${blocked ? 'blocked' : ''} ${active ? 'dragging' : ''} ${highlighted.has(task.uid) ? '' : 'muted-row'}`} style={{ left, width: barWidth, top: item.top + (item.isParent ? 4 : 6), height: item.isParent ? Math.max(34, item.height - 8) : 30, zIndex: item.depth + 3, ...statusStyle }} onContextMenu={e => e.preventDefault()} onPointerDown={e => begin(e, task, 'move')} onPointerMove={moving} onPointerUp={finish} onPointerCancel={cancel} onClick={() => { if (!skipClick.current) onSelect(task.uid); skipClick.current = false; }} onKeyDown={e => { if (e.key === 'Enter') onSelect(task.uid); if (e.key === 'Escape') cancel(); }} onMouseEnter={e => { if (!dragRef.current && !item.isParent) setHover({ uid: task.uid, x: e.clientX, y: e.clientY }); }} onMouseLeave={() => setHover(null)}><span className="bar-handle left" onPointerDown={e => begin(e, task, 'start')} /><span className="bar-name">{task.name}</span><span className="bar-handle right" onPointerDown={e => begin(e, task, 'end')} /></div>;
         })}</div>
         {!tasks.length && <div className="empty">还没有任务。点击“新增任务”开始安排。</div>}
         <svg className="dependency-layer" width={width} height={height} style={{ left: taskListWidth }}><defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="currentColor" strokeWidth="1.5" /></marker></defs>{tasks.flatMap(task => task.dependencies.filter(dep => task.uid === selected || dep === selected).map(dep => { const a = schedule.get(dep), b = schedule.get(task.uid), from = byUid.get(dep), to = byUid.get(task.uid); if (!a || !b || !from || !to) return null; const ax = x(a.end), ay = from.top + 20, bx = x(b.start), by = to.top + 20, c1x = ax + 22, c2x = bx - 22; const d = `M${ax},${ay} C${c1x},${ay} ${c2x},${by} ${bx},${by}`; const mx = (ax + 3 * c1x + 3 * c2x + bx) / 8, my = (ay + 3 * ay + 3 * by + by) / 8, dx = 3 * ((c1x - ax) + 2 * (c2x - c1x) + (bx - c2x)) / 4, dy = 3 * ((ay - ay) + 2 * (by - ay) + (by - by)) / 4, length = Math.hypot(dx, dy) || 1, ux = dx / length, uy = dy / length; return <g key={`${dep}-${task.uid}`}><path className="dependency-halo" d={d} /><path className="dependency-arrow" d={d} /><line className="dependency-arrowhead-halo" x1={mx - ux * 5} y1={my - uy * 5} x2={mx + ux * 5} y2={my + uy * 5} /><line className="dependency-arrowhead" x1={mx - ux * 5} y1={my - uy * 5} x2={mx + ux * 5} y2={my + uy * 5} markerEnd="url(#arrow)" /></g>; }))}</svg>

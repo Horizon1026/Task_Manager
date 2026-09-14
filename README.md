@@ -63,6 +63,19 @@ npm start
 
 本地日历从 `holiday-cn` 获取年度中国大陆全国统一放假、调休数据。断网时使用 YAML 中已保存的年度快照；未加载的年份按普通周末暂估并显示提示。手动修正优先于联网数据，并与任务一起保存。
 
+任务块状态色可在 YAML 的 `project.status_colors` 中配置；每种状态需要 `fill`（填充色）、`border`（边框色）和 `text`（文字色），均为 `#RRGGBB`：
+
+```yaml
+project:
+  status_colors:
+    未开始: { fill: "#dfe9e2", border: "#c8d8cb", text: "#647c69" }
+    进行中: { fill: "#bce0d5", border: "#92c7b7", text: "#2a7361" }
+    验收中: { fill: "#e5ddf4", border: "#d0bfe7", text: "#8264a3" }
+    已完成: { fill: "#d4e3f5", border: "#b9cfe9", text: "#567ba2" }
+```
+
+缺少该字段的旧项目会自动使用上述默认颜色。
+
 ## 验证
 
 ```bash
