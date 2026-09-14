@@ -1,0 +1,9 @@
+/* Compact dependency direction cue; the white halo remains for contrast. */
+.tree-gantt-body .dependency-layer .dependency-halo{stroke-width:4.5}.tree-gantt-body .dependency-layer .dependency-arrow{stroke-width:2}.tree-gantt-body .dependency-layer .dependency-arrowhead-halo{stroke-width:4.5}.tree-gantt-body .dependency-layer .dependency-arrowhead{stroke-width:2}
+
+/* The label list mirrors the task tree: containers carry their UID and name;
+   leaves additionally show a subdued, inline assignee. */
+.tree-task-labels .tree-task-cell.tree-parent-cell{align-items:center;padding-top:0}
+.tree-task-cell .row-number{max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.tree-task-cell:not(.tree-parent-cell) .task-title{display:flex;align-items:center;gap:6px}.tree-task-cell:not(.tree-parent-cell) .task-title strong{min-width:0;flex:0 1 auto}.tree-task-cell .task-assignee{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8a9a90;font-size:10px;font-weight:400}
+
+.tree-gantt-body .tree-task-labels{z-index:30;will-change:transform}.task-list-resize-handle{position:absolute;top:0;right:-5px;bottom:0;width:10px;cursor:col-resize;touch-action:none;z-index:12}.task-list-resize-handle:hover,.task-list-resize-handle:active{background:#17887d55}
