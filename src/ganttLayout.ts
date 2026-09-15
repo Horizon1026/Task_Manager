@@ -4,8 +4,10 @@ export type GanttTreeItem = { task: Task; depth: number; top: number; height: nu
 export type GanttTreeLayout = { items: GanttTreeItem[]; height: number };
 
 const LEAF_HEIGHT = 42;
-const PARENT_HEADER_HEIGHT = 34;
 const SIBLING_GAP = 6;
+// Reserve one normal row for a parent label before placing its children.  This
+// lets the left tree list share the exact same row origins as the task bars.
+const PARENT_HEADER_HEIGHT = LEAF_HEIGHT + SIBLING_GAP;
 
 /** Assigns a vertical rectangle to every task; parent rectangles enclose descendants. */
 export function ganttTreeLayout(project: Project): GanttTreeLayout {

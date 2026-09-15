@@ -1,4 +1,4 @@
-# MissionManager
+# TaskManager
 
 本地优先的 YAML 任务排期管理器。第一阶段已实现：
 
@@ -16,7 +16,7 @@
 本机的独立 Node.js 运行环境和依赖已经准备好，可以直接运行：
 
 ```bash
-cd /home/jiapengli/Desktop/code/MissionManager
+cd /home/horizon/Desktop/code_space/Task_Manager
 bash run.sh
 ```
 
@@ -47,8 +47,10 @@ npm run dev
 浏览器打开 `http://127.0.0.1:4310`。默认项目文件是 `data/project.yaml`，也可以用环境变量指定：
 
 ```bash
-MISSION_FILE=/path/to/project.yaml npm run dev
+TASK_MANAGER_FILE=/path/to/project.yaml npm run dev
 ```
+
+顶部“项目文件”选择器会列出启动项目文件同目录下的所有 `*.yaml` 文件。默认情况下只需将 `project_c5.yaml`、`project_j30.yaml` 等文件放入 `data/`，即可在界面中切换；每个项目使用独立的备份目录。
 
 生产构建：
 
@@ -76,6 +78,15 @@ project:
 
 缺少该字段的旧项目会自动使用上述默认颜色。
 
+执行人由项目级名单限定；在任务详情中只能从下拉框选择：
+
+```yaml
+project:
+  assignees: [小林, 小陈, 你, 测试员]
+```
+
+任务中的 `assignee` 必须是此名单的成员。旧项目缺少 `assignees` 时，会根据已有任务自动生成名单，并会在下次保存时写入 YAML。
+
 ## 验证
 
 ```bash
@@ -97,7 +108,7 @@ export PATH="$PWD/.runtime/node-v22.22.0-linux-x64/bin:$PATH"
 ## 第一阶段边界
 
 - 提供数百条任务的基础实现，尚未对数千条任务和长达几十年的细粒度视图做性能优化。
-- UI 固定一次打开一个 YAML；切换项目通过重启时设置 `MISSION_FILE`。文件必须事先存在。
+- 项目选择器只显示启动项目文件所在目录的顶层 `*.yaml` 文件；文件必须事先存在，不提供界面内新建或跨目录浏览。
 - 日历联网更新从“本地日历”手动触发；示例没有预装年度数据，第一次使用建议加载排期涉及的年份。
 - 未匹配标签的任务仍参与计算。执行人和状态只是信息，不自动错峰或冻结排期。
 - 年度日历目前只支持全国统一安排，不包含地方及特定人群假期。

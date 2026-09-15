@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProject } from '../src/model';
-import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveTask, normalizeTreeOrder, scheduleProject, toSlot } from '../src/schedule';
+import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, toSlot } from '../src/schedule';
 import { alignStart, timeColumns } from '../src/timeline';
 import { project, task } from './fixtures';
 
@@ -86,6 +86,15 @@ test('tree order keeps each parent subtree contiguous while preserving sibling o
   const ordered = normalizeTreeOrder(p);
   assert.deepEqual(ordered.tasks.map(task => task.uid), ['root-b', 'root-a', 'child-b', 'grandchild', 'child-a']);
   assert.deepEqual(ordered.tasks.map(task => task.order), [1, 2, 3, 4, 5]);
+});
+
+test('moving a sibling keeps the task subtree together and rejects cross-level moves', () => {
+  const value = project([
+    task('root-a'), task('child-a', { parent_uid: 'root-a' }), task('root-b'), task('child-b', { parent_uid: 'root-b' }), task('root-c'),
+  ]);
+  const moved = moveSiblingTask(value, 'root-c', 'root-a');
+  assert.deepEqual(moved.tasks.map(task => task.uid), ['root-c', 'root-a', 'child-a', 'root-b', 'child-b']);
+  assert.throws(() => moveSiblingTask(value, 'child-a', 'root-b'), /同一层级/);
 });
 test('rejects self-dependencies, cycles, dangling references, duplicate UIDs and order', () => {
   assert.throws(() => validateProject(project([task('a', { dependencies: ['a'] })])), /循环/);

@@ -10,3 +10,12 @@
 
 /* The board itself grows with its task tree; only the horizontal timeline scrolls. */
 .board .gantt-scroll{max-height:none;min-height:0;overflow-x:auto;overflow-y:hidden}.board .gantt-scroll:active{cursor:grabbing}
+
+/* Make late work immediately noticeable without obscuring its status color. */
+.tree-task-tracks .task-bar.late{animation:late-task-breathe 1.8s ease-in-out infinite;box-shadow:0 0 0 0 #d3706100}
+@keyframes late-task-breathe{0%,100%{box-shadow:0 0 0 0 #d3706140}50%{box-shadow:0 0 0 5px #d3706100,0 0 12px 2px #d3706170}}
+@media(prefers-reduced-motion:reduce){.tree-task-tracks .task-bar.late{animation:none}}
+
+.hover-card .task-preview-description{line-height:1.5;max-height:48px;overflow:hidden}.hover-card .late-preview{color:#c45548;font-weight:650}
+
+.project-file-bar{padding:10px 22px;border-bottom:1px solid #edf0ed;background:#fbfcfa}.project-file-picker{display:flex;align-items:center;gap:8px;margin:0;color:#7e8b85;font-size:11px;line-height:1;white-space:nowrap}.project-file-picker.project-file-picker>select{width:180px;margin:0;padding:4px 24px 4px 7px;font-size:11px;line-height:1.2}

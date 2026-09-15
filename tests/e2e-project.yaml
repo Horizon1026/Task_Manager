@@ -1,11 +1,12 @@
 version: 1
 project:
-  name: MissionManager 示例项目
+  name: TaskManager 示例项目
   start_date: 2026-09-14
   default_scale: week
   default_filter:
     labels: []
     mode: or
+  assignees: [小林, 小陈, 你, 测试员]
 calendar:
   years: []
   overrides: []

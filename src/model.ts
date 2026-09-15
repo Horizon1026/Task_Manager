@@ -47,6 +47,7 @@ export const projectSchema = z.object({
     name: z.string().trim().min(1).max(200), start_date: date,
     default_scale: z.enum(scales),
     default_filter: z.object({ labels: z.array(z.string()), mode: z.enum(['and', 'or']) }).strict(),
+    assignees: z.array(z.string().trim().min(1).max(200)).max(1000).default([]),
     status_colors: statusColors,
   }).strict(),
   calendar: z.object({
@@ -80,6 +81,11 @@ export function validateProject(input: unknown): Project {
   const parsed = projectSchema.safeParse(input);
   if (!parsed.success) throw new Error(parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n'));
   const p = parsed.data;
+  if (!p.project.assignees.length) p.project.assignees = [...new Set(p.tasks.map(task => task.assignee || '未指定'))].sort();
+  for (const task of p.tasks) {
+    if (!task.assignee) task.assignee = '未指定';
+    if (!p.project.assignees.includes(task.assignee)) throw new Error(`任务「${task.name}」的执行人不在项目名单中：${task.assignee}`);
+  }
   const map = new Map(p.tasks.map(t => [t.uid, t]));
   if (map.size !== p.tasks.length) throw new Error('任务 UID 重复');
   const orders = p.tasks.map(t => t.order).sort((a, b) => a - b);

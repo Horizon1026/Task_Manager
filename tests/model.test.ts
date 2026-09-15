@@ -14,3 +14,11 @@ test('status colors are YAML-configurable, validated, and defaulted for legacy p
   configured.project.status_colors['进行中'].fill = 'red';
   assert.throws(() => validateProject(configured), /#RRGGBB/);
 });
+
+test('task assignees must be selected from the project assignee list', () => {
+  const configured = JSON.parse(JSON.stringify(project()));
+  configured.project.assignees = ['小林']; configured.tasks[0].assignee = '小林';
+  assert.equal(validateProject(configured).tasks[0].assignee, '小林');
+  configured.tasks[0].assignee = '名单外成员';
+  assert.throws(() => validateProject(configured), /不在项目名单/);
+});

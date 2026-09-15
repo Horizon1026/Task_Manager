@@ -102,6 +102,19 @@ export function moveTask(project: Project, uid: string, targetOrder: number): Pr
   return normalizeTreeOrder({ ...project, tasks: ordered.map((t, i) => ({ ...t, order: i + 1 })) });
 }
 
+/** Move a task (and its subtree) before a sibling without changing its parent. */
+export function moveSiblingTask(project: Project, uid: string, targetUid: string): Project {
+  const task = project.tasks.find(value => value.uid === uid), target = project.tasks.find(value => value.uid === targetUid);
+  if (!task || !target) throw new Error('任务不存在');
+  if (task.uid === target.uid) return project;
+  if (task.parent_uid !== target.parent_uid) throw new Error('只能在同一层级的任务之间排序');
+  const siblings = project.tasks.filter(value => value.parent_uid === task.parent_uid).sort((a, b) => a.order - b.order);
+  const from = siblings.findIndex(value => value.uid === uid);
+  siblings.splice(from, 1); siblings.splice(siblings.findIndex(value => value.uid === targetUid), 0, task);
+  const order = new Map(siblings.map((value, index) => [value.uid, index + 1]));
+  return normalizeTreeOrder({ ...project, tasks: project.tasks.map(value => order.has(value.uid) ? { ...value, order: order.get(value.uid)! } : value) });
+}
+
 /** Keep each subtree contiguous while preserving the current order among siblings. */
 export function normalizeTreeOrder(project: Project): Project {
   const children = new Map<string | null, Task[]>();

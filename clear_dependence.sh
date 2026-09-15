@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-mission_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$mission_dir"
+task_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$task_dir"
 generated_paths=(node_modules dist .runtime test-results playwright-report)
 for path in "${generated_paths[@]}"; do
   if [[ -e "$path" || -L "$path" ]]; then printf '清理 %s\n' "$path"; rm -rf -- "$path"; fi

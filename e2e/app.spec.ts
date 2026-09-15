@@ -3,18 +3,35 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from 'yaml';
 
 test.beforeEach(async ({ page, request }) => {
+  await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
   const data = await (await request.get('/api/project')).json();
   await writeFile(data.file, await readFile('tests/e2e-project.yaml', 'utf8'));
-  await page.goto('/'); await expect(page.getByRole('heading', { name: 'MissionManager 示例项目' })).toBeVisible();
+  await page.goto('/'); await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
+});
+test('selects a YAML project file from the workspace picker', async ({ page }) => {
+  const picker = page.getByLabel('选择项目文件');
+  await expect(picker.locator('option')).toHaveCount(2);
+  await picker.selectOption('project_c5.yaml');
+  await expect(page.getByRole('heading', { name: 'C5 项目' })).toBeVisible();
+  await picker.selectOption('project.yaml');
+  await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
 });
 async function taskDetails(page: Page, name: string) { await page.getByRole('button', { name, exact: false }).filter({ has: page.locator('strong') }).first().click(); }
 test('loads seven scales, colors, muted filtering and read-only UID', async ({ page }) => {
   await expect(page.locator('.task-bar')).toHaveCount(6);
+  await expect(page.getByTestId('bar-task-engine')).toHaveCSS('border-color', 'rgb(211, 112, 97)');
+  await expect(page.getByTestId('bar-task-engine')).toHaveCSS('border-top-width', '2px');
+  await expect(page.getByTestId('bar-task-engine')).toHaveCSS('animation-name', 'late-task-breathe');
   await page.getByTestId('bar-task-engine').hover();
   await expect(page.locator('.hover-card')).toContainText('半天排期引擎');
+  await expect(page.locator('.hover-card')).toContainText('任务详情');
+  await expect(page.locator('.hover-card')).toContainText('支持依赖计算和超期预警。');
+  await expect(page.locator('.hover-card')).toContainText('已超期');
   for (const name of ['天', '周', '半月', '月', '季度', '半年', '年']) { await page.getByRole('button', { name, exact: true }).click(); await expect(page.locator('.task-bar')).toHaveCount(6); }
   await page.getByRole('button', { name: '核心', exact: true }).click();
-  await expect(page.locator('.gantt-row')).toHaveCount(6); await expect(page.locator('.gantt-row.muted-row')).toHaveCount(5);
+  await expect(page.locator('.gantt-row')).toHaveCount(1); await expect(page.locator('.task-bar')).toHaveCount(1);
+  await page.getByRole('button', { name: '全部', exact: true }).click();
+  await expect(page.locator('.task-bar')).toHaveCount(6);
   await taskDetails(page, '半天排期引擎');
   await expect(page.getByLabel('任务 UID')).toHaveAttribute('readonly', '');
   await expect(page.getByLabel('任务详情编辑')).toContainText('超过最迟完成时间');
@@ -37,6 +54,13 @@ test('freezes and resizes the left task list', async ({ page }) => {
   await page.mouse.down(); await page.mouse.move(box.x + 80, box.y + box.height / 2, { steps: 6 }); await page.mouse.up();
   await expect(page.locator('.task-heading')).toHaveCSS('width', '340px');
   await expect(taskList).toHaveCSS('width', '340px');
+});
+test('drags a task tree node to reorder same-level siblings', async ({ page }) => {
+  const rows = page.locator('.tree-task-cell');
+  await rows.filter({ hasText: '交互与视觉设计' }).locator('.row-grip').dragTo(rows.filter({ hasText: '需求梳理' }));
+  await expect.poll(async () => rows.evaluateAll(nodes => nodes.map(node => node.querySelector('strong')?.textContent))).toEqual([
+    '交互与视觉设计', '需求梳理', '半天排期引擎', '甘特图与任务编辑', '联合功能测试', '第一版交付',
+  ]);
 });
 test('blank Gantt canvas closes task details and supports horizontal panning', async ({ page }) => {
   await page.getByTestId('bar-task-discovery').click();
@@ -64,6 +88,12 @@ test('blank Gantt canvas closes task details and supports horizontal panning', a
   await page.mouse.move(blank!.x, blank!.y);
   await page.mouse.down(); await page.mouse.move(blank!.x - 120, blank!.y, { steps: 6 }); await page.mouse.up();
   await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+});
+test('Ctrl+N creates a task and opens its details', async ({ page }) => {
+  await page.keyboard.press('Control+n');
+  await expect(page.getByLabel('任务详情编辑')).toBeVisible();
+  await expect(page.getByLabel('任务名称', { exact: true })).toHaveValue('新任务');
+  await expect(page.locator('.task-bar')).toHaveCount(7);
 });
 test('edits are drafts; Ctrl+S saves edited content and matching backup', async ({ page, request }) => {
   await taskDetails(page, '需求梳理'); await page.getByLabel('任务名称', { exact: true }).fill('浏览器测试任务');
@@ -93,7 +123,7 @@ test('calendar local override recalculates preview and persists with project', a
 });
 test('task CRUD and reorder preserve UID references', async ({ page, request }) => {
   await page.getByRole('button', { name: '新增任务', exact: false }).click();
-  await page.getByLabel('任务名称', { exact: true }).fill('新增验证'); await page.getByLabel('执行人', { exact: true }).fill('测试员');
+  await page.getByLabel('任务名称', { exact: true }).fill('新增验证'); await page.getByLabel('执行人', { exact: true }).selectOption('测试员');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   await page.getByRole('button', { name: '上移 新增验证', exact: true }).click({ force: true });
   await page.getByRole('button', { name: '保存并备份', exact: false }).click(); await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
@@ -121,11 +151,25 @@ test('parent selection creates a container, prevents descendant cycles, and pers
   const childLabel = (await page.locator('.gantt-row').filter({ hasText: '子级验证任务' }).boundingBox())!;
   expect(parentBar.height).toBeGreaterThan(childBar.height);
   expect(parentLabel.height).toBe(childLabel.height);
+  expect(parentLabel.y).toBe(parentBar.y);
+  expect(childLabel.y).toBe(childBar.y);
   expect(childLabel.y).toBeGreaterThanOrEqual(parentLabel.y + parentLabel.height);
   expect(childBar.y).toBeGreaterThan(parentBar.y);
   expect(childBar.y + childBar.height).toBeLessThan(parentBar.y + parentBar.height);
   await expect(page.getByRole('button', { name: '任务条 父级验证任务' })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(page.getByRole('button', { name: '任务条 父级验证任务' })).toHaveCSS('align-items', 'flex-start');
+  const resizeHandle = page.getByRole('separator', { name: '调整任务列表宽度' });
+  const resizeBox = (await resizeHandle.boundingBox())!;
+  await page.mouse.move(resizeBox.x, resizeBox.y + resizeBox.height / 2);
+  await page.mouse.down(); await page.mouse.move(resizeBox.x + 120, resizeBox.y + resizeBox.height / 2, { steps: 6 }); await page.mouse.up();
+  const parentBarForPan = page.getByRole('button', { name: '任务条 父级验证任务' });
+  await parentBarForPan.scrollIntoViewIfNeeded();
+  const panBox = (await parentBarForPan.boundingBox())!;
+  const parentFrameY = panBox.y + 3;
+  await page.mouse.move(panBox.x + panBox.width / 2, parentFrameY);
+  await page.mouse.down(); await page.mouse.move(panBox.x - 90, parentFrameY, { steps: 6 }); await page.mouse.up();
+  await expect.poll(async () => page.locator('.gantt-scroll').evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+  await expect(page.getByLabel('任务详情编辑')).toHaveCount(0);
   await page.getByRole('button', { name: '保存并备份', exact: false }).click();
   await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
   const data = await (await request.get('/api/project')).json();

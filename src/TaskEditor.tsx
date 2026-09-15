@@ -26,7 +26,7 @@ export function TaskEditor({ task, project, scheduled, onChange, onParentChange,
     {isParent && <p className="field-note">这是父任务：排期由子任务自动汇总，不能单独设置工期、开始时间或前置依赖。</p>}
     <label>任务名称<input value={task.name} maxLength={200} onChange={e => set('name', e.target.value)} /></label>
     <label>任务详情<textarea rows={3} value={task.description} onChange={e => set('description', e.target.value)} /></label>
-    <div className="two-columns"><label>执行人<input value={task.assignee} onChange={e => set('assignee', e.target.value)} /></label><label>当前状态<select value={task.status} onChange={e => set('status', e.target.value as Task['status'])}>{statuses.map(s => <option key={s}>{s}</option>)}</select></label></div>
+    <div className="two-columns"><label>执行人<select aria-label="执行人" value={task.assignee} onChange={e => set('assignee', e.target.value)}>{project.project.assignees.map(assignee => <option key={assignee} value={assignee}>{assignee}</option>)}</select></label><label>当前状态<select value={task.status} onChange={e => set('status', e.target.value as Task['status'])}>{statuses.map(s => <option key={s}>{s}</option>)}</select></label></div>
     <fieldset disabled={isParent}>
     <MomentInput title="最早可开始时间" value={task.earliest_start} onChange={v => set('earliest_start', v)} />
     {!task.earliest_start && <p className="field-note">使用项目开始日期：{project.project.start_date} 上午</p>}

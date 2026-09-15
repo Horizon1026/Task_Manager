@@ -6,16 +6,40 @@ project:
   default_filter:
     labels: []
     mode: and
+  assignees:
+    - 产品委员会
+    - 你
+    - 值班小组
+    - 周哲
+    - 小林
+    - 小陈
+    - 林晓
+    - 王宁
+    - 赵敏
+    - 运营组
+    - 陈雨
   status_colors:
-    未开始: { fill: "#dfe9e2", border: "#c8d8cb", text: "#647c69" }
-    进行中: { fill: "#bce0d5", border: "#92c7b7", text: "#2a7361" }
-    验收中: { fill: "#e5ddf4", border: "#d0bfe7", text: "#8264a3" }
-    已完成: { fill: "#d4e3f5", border: "#b9cfe9", text: "#567ba2" }
+    未开始:
+      fill: "#e5e7eb"
+      border: "#cbd5e1"
+      text: "#64748b"
+    进行中:
+      fill: "#dbeafe"
+      border: "#93c5fd"
+      text: "#1d4ed8"
+    验收中:
+      fill: "#ffedd5"
+      border: "#fdba74"
+      text: "#c2410c"
+    已完成:
+      fill: "#dcfce7"
+      border: "#86efac"
+      text: "#15803d"
 calendar:
   years:
     - year: 2026
       source: https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/2026.json
-      fetched_at: 2026-09-14T16:09:22.810Z
+      fetched_at: 2026-09-15T15:20:02.320Z
       papers:
         - https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm
       days:
@@ -239,7 +263,7 @@ tasks:
     labels:
       - 设计
       - 核心
-    allow_rest_day_work: false
+    allow_rest_day_work: true
   - uid: visual-spec
     order: 7
     name: 视觉规范与切图

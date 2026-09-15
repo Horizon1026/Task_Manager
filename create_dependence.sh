@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-mission_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$mission_dir"
+task_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$task_dir"
 node_version="v22.22.0"
 node_archive="node-${node_version}-linux-x64"
-runtime_dir="$mission_dir/.runtime"
+runtime_dir="$task_dir/.runtime"
 if ! command -v node >/dev/null 2>&1; then
   node_bin="$runtime_dir/$node_archive/bin/node"
   if [[ ! -x "$node_bin" ]]; then
