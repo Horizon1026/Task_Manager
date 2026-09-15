@@ -1,0 +1,44 @@
+version: 1
+project:
+  name: 新建项目
+  start_date: 2026-09-14
+  default_scale: week
+  default_filter:
+    labels: []
+    mode: or
+  assignees:
+    - 未指定
+  status_colors:
+    未开始:
+      fill: "#e5e7eb"
+      border: "#cbd5e1"
+      text: "#64748b"
+    进行中:
+      fill: "#dbeafe"
+      border: "#93c5fd"
+      text: "#1d4ed8"
+    验收中:
+      fill: "#ffedd5"
+      border: "#fdba74"
+      text: "#c2410c"
+    已完成:
+      fill: "#dcfce7"
+      border: "#86efac"
+      text: "#15803d"
+calendar:
+  years: []
+  overrides: []
+tasks:
+  - uid: task-initial
+    order: 1
+    name: 初始任务
+    description: 请修改此任务，或新增任务开始排期。
+    assignee: 未指定
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    dependencies: []
+    labels: []
+    allow_rest_day_work: false
