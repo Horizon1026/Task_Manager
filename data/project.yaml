@@ -1,23 +1,20 @@
 version: 1
 project:
-  name: Aurora 平台交付示例
-  start_date: 2026-09-14
+  name: 集群无人机项目
+  start_date: 2026-03-14
   default_scale: week
   default_filter:
     labels: []
-    mode: and
+    mode: or
   assignees:
-    - 产品委员会
-    - 你
-    - 值班小组
-    - 周哲
-    - 小林
-    - 小陈
-    - 林晓
-    - 王宁
-    - 赵敏
-    - 运营组
-    - 陈雨
+    - 未指定
+    - 产品经理
+    - 硬件工程师
+    - 结构工程师
+    - 软件工程师
+    - 测试工程师
+    - 质量工程师
+    - 生产工程师
   status_colors:
     未开始:
       fill: "#e5e7eb"
@@ -39,7 +36,7 @@ calendar:
   years:
     - year: 2026
       source: https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/2026.json
-      fetched_at: 2026-09-15T15:20:02.320Z
+      fetched_at: 2026-09-16T03:22:25.317Z
       papers:
         - https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm
       days:
@@ -160,302 +157,826 @@ calendar:
         - date: 2026-10-10
           name: 国庆节
           isOffDay: false
-  overrides:
-    - date: 2026-09-18
-      is_workday: false
-      note: 团队团建日
-    - date: 2026-09-27
-      is_workday: true
-      note: 发布冲刺补班
+  overrides: []
 tasks:
-  - uid: product-release
+  - uid: p-product
     order: 1
-    name: Aurora 平台第一版
-    description: 汇总产品规划、设计、研发和验证的一级交付容器。
-    assignee: 产品委员会
-    status: 进行中
+    name: 产品
+    description: ""
+    assignee: 产品经理
+    status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 0.5
+    duration_days: 1
     parent_uid: null
+    collapse_children: false
     dependencies: []
     labels:
-      - 核心
-      - 发布
+      - 产品
     allow_rest_day_work: false
-  - uid: discovery-phase
+  - uid: p-requirement
     order: 2
-    name: 需求与范围
-    description: 明确目标用户、范围和验收边界。
-    assignee: 林晓
-    status: 已完成
+    name: 产品需求导入
+    description: ""
+    assignee: 产品经理
+    status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 0.5
-    parent_uid: product-release
+    duration_days: 1
+    parent_uid: p-product
+    collapse_children: false
     dependencies: []
     labels:
-      - 规划
+      - 产品
     allow_rest_day_work: false
-  - uid: user-research
+  - uid: p-market
     order: 3
-    name: 用户访谈与竞品调研
-    description: 完成访谈纪要并输出机会点清单。
-    assignee: 林晓
-    status: 已完成
-    earliest_start:
-      date: 2026-09-14
-      period: am
-    latest_finish:
-      date: 2026-09-15
-      period: pm
-    duration_days: 1.5
-    parent_uid: discovery-phase
+    name: 市场调研
+    description: ""
+    assignee: 产品经理
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: p-requirement
+    collapse_children: false
     dependencies: []
     labels:
-      - 规划
-      - 调研
+      - 产品
     allow_rest_day_work: false
-  - uid: scope-baseline
+  - uid: p-prd
     order: 4
-    name: 范围基线与验收标准
-    description: 形成冻结的 MVP 范围和可测试验收条目。
-    assignee: 林晓
-    status: 已完成
-    earliest_start: null
-    latest_finish: null
-    duration_days: 1
-    parent_uid: discovery-phase
-    dependencies:
-      - user-research
-    labels:
-      - 规划
-      - 核心
-    allow_rest_day_work: false
-  - uid: design-phase
-    order: 5
-    name: 体验与视觉设计
-    description: 包含信息架构、交互原型和视觉规范。
-    assignee: 陈雨
-    status: 验收中
-    earliest_start: null
-    latest_finish: null
-    duration_days: 0.5
-    parent_uid: product-release
-    dependencies: []
-    labels:
-      - 设计
-    allow_rest_day_work: false
-  - uid: ux-flow
-    order: 6
-    name: 信息架构与交互原型
-    description: 覆盖关键流程、空状态和异常路径。
-    assignee: 陈雨
-    status: 验收中
-    earliest_start: null
-    latest_finish:
-      date: 2026-09-18
-      period: pm
-    duration_days: 2
-    parent_uid: design-phase
-    dependencies:
-      - scope-baseline
-    labels:
-      - 设计
-      - 核心
-    allow_rest_day_work: true
-  - uid: visual-spec
-    order: 7
-    name: 视觉规范与切图
-    description: 交付组件状态、色彩和响应式标注。
-    assignee: 陈雨
+    name: 产品PRD输出
+    description: ""
+    assignee: 产品经理
     status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 1.5
-    parent_uid: design-phase
-    dependencies:
-      - ux-flow
-    labels:
-      - 设计
-      - 界面
-    allow_rest_day_work: false
-  - uid: engineering-phase
-    order: 8
-    name: 工程实现
-    description: 研发一级容器，自动汇总基础、功能和集成任务。
-    assignee: 周哲
-    status: 进行中
-    earliest_start: null
-    latest_finish: null
-    duration_days: 0.5
-    parent_uid: product-release
-    dependencies: []
-    labels:
-      - 开发
-      - 核心
-    allow_rest_day_work: false
-  - uid: foundation-phase
-    order: 9
-    name: 技术基础
-    description: 架构与数据层设计。
-    assignee: 周哲
-    status: 已完成
-    earliest_start: null
-    latest_finish: null
-    duration_days: 0.5
-    parent_uid: engineering-phase
-    dependencies: []
-    labels:
-      - 开发
-      - 基础
-    allow_rest_day_work: false
-  - uid: architecture
-    order: 10
-    name: 系统架构评审
-    description: 完成服务边界、接口原则和风险评审。
-    assignee: 周哲
-    status: 已完成
-    earliest_start: null
-    latest_finish: null
-    duration_days: 1
-    parent_uid: foundation-phase
-    dependencies:
-      - scope-baseline
-    labels:
-      - 开发
-      - 架构
-    allow_rest_day_work: false
-  - uid: schema
-    order: 11
-    name: 数据模型与迁移脚本
-    description: 创建核心表、索引及可回滚迁移。
-    assignee: 王宁
-    status: 已完成
-    earliest_start: null
-    latest_finish: null
-    duration_days: 1.5
-    parent_uid: foundation-phase
-    dependencies:
-      - architecture
-    labels:
-      - 开发
-      - 数据
-    allow_rest_day_work: false
-  - uid: delivery-phase
-    order: 12
-    name: 功能开发与集成
-    description: API、Web 客户端和联调的二级容器。
-    assignee: 周哲
-    status: 进行中
-    earliest_start: null
-    latest_finish: null
-    duration_days: 0.5
-    parent_uid: engineering-phase
-    dependencies: []
-    labels:
-      - 开发
-    allow_rest_day_work: false
-  - uid: api-service
-    order: 13
-    name: API 服务实现
-    description: 实现鉴权、项目数据和日历接口。
-    assignee: 王宁
-    status: 进行中
-    earliest_start: null
-    latest_finish:
-      date: 2026-09-24
-      period: pm
     duration_days: 3
-    parent_uid: delivery-phase
+    parent_uid: p-requirement
+    collapse_children: false
     dependencies:
-      - schema
+      - p-market
     labels:
-      - 开发
-      - 后端
-      - 核心
+      - 产品
     allow_rest_day_work: false
-  - uid: web-client
-    order: 14
-    name: Web 客户端实现
-    description: 实现任务树编辑、筛选和响应式界面。
-    assignee: 赵敏
-    status: 进行中
-    earliest_start: null
-    latest_finish: null
-    duration_days: 3.5
-    parent_uid: delivery-phase
-    dependencies:
-      - api-service
-      - visual-spec
-    labels:
-      - 开发
-      - 前端
-      - 界面
-    allow_rest_day_work: false
-  - uid: integration
-    order: 15
-    name: 端到端联调
-    description: 处理跨端数据、错误状态和关键用户路径。
-    assignee: 周哲
-    status: 未开始
-    earliest_start: null
-    latest_finish:
-      date: 2026-09-30
-      period: am
-    duration_days: 2
-    parent_uid: delivery-phase
-    dependencies:
-      - api-service
-      - web-client
-    labels:
-      - 开发
-      - 联调
-    allow_rest_day_work: false
-  - uid: validation-phase
-    order: 16
-    name: 质量验证与交付
-    description: 自动汇总测试、文档和发布准备。
-    assignee: 你
+  - uid: p-accept
+    order: 5
+    name: 产品验收
+    description: 对照PRD逐项验收，确认功能、性能、质量达标
+    assignee: 产品经理
     status: 未开始
     earliest_start: null
     latest_finish: null
-    duration_days: 0.5
-    parent_uid: product-release
-    dependencies: []
+    duration_days: 3
+    parent_uid: p-product
+    collapse_children: false
+    dependencies:
+      - t-report
+      - q-dhr
     labels:
-      - 测试
-      - 发布
+      - 产品
     allow_rest_day_work: false
-  - uid: qa-regression
-    order: 17
-    name: 回归测试与可访问性检查
-    description: 执行桌面、移动端和键盘可访问性测试。
-    assignee: 你
+  - uid: p-release-review
+    order: 6
+    name: 发布评审
+    description: 产品、研发、生产、质量联合评审，确认可发布
+    assignee: 产品经理
     status: 未开始
     earliest_start: null
     latest_finish: null
     duration_days: 2
-    parent_uid: validation-phase
+    parent_uid: p-product
+    collapse_children: false
     dependencies:
-      - integration
+      - p-accept
     labels:
-      - 测试
+      - 产品
+    allow_rest_day_work: false
+  - uid: p-launch
+    order: 7
+    name: 正式发布
+    description: 对外发布，交付首批客户
+    assignee: 产品经理
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: p-product
+    collapse_children: false
+    dependencies:
+      - p-release-review
+      - pr-mass
+    labels:
+      - 产品
+    allow_rest_day_work: false
+  - uid: p-feedback
+    order: 8
+    name: 售后反馈闭环
+    description: 收集售后数据，形成改进需求，回流产品
+    assignee: 产品经理
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: p-product
+    collapse_children: false
+    dependencies:
+      - p-launch
+    labels:
+      - 产品
       - 质量
     allow_rest_day_work: false
-  - uid: release-notes
-    order: 18
-    name: 发布说明与运行手册
-    description: 整理变更、已知问题、回滚步骤和支持渠道。
-    assignee: 林晓
+  - uid: h-root
+    order: 9
+    name: 硬件
+    description: ""
+    assignee: 硬件工程师
     status: 未开始
     earliest_start: null
     latest_finish: null
     duration_days: 1
-    parent_uid: validation-phase
-    dependencies:
-      - qa-regression
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
     labels:
-      - 文档
-      - 发布
+      - 硬件
+    allow_rest_day_work: false
+  - uid: h-scheme
+    order: 10
+    name: 硬件方案设计
+    description: 含传感器、功能设备、动力设备选型
+    assignee: 硬件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: h-root
+    collapse_children: false
+    dependencies:
+      - p-prd
+    labels:
+      - 硬件
+    allow_rest_day_work: false
+  - uid: h-dev
+    order: 11
+    name: 硬件开发
+    description: 原理图设计、评审、PCB布局
+    assignee: 硬件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: h-root
+    collapse_children: false
+    dependencies:
+      - h-scheme
+    labels:
+      - 硬件
+    allow_rest_day_work: false
+  - uid: h-pcba
+    order: 12
+    name: PCBA制版+SMT
+    description: ""
+    assignee: 硬件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 7
+    parent_uid: h-root
+    collapse_children: false
+    dependencies:
+      - h-dev
+      - s-frame
+    labels:
+      - 硬件
+      - 外协
+    allow_rest_day_work: true
+  - uid: h-check
+    order: 13
+    name: 硬件回板功能检查
+    description: ""
+    assignee: 硬件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: h-root
+    collapse_children: false
+    dependencies:
+      - h-pcba
+    labels:
+      - 硬件
+    allow_rest_day_work: false
+  - uid: s-root
+    order: 14
+    name: 结构
+    description: ""
+    assignee: 结构工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels:
+      - 结构
+    allow_rest_day_work: false
+  - uid: s-id
+    order: 15
+    name: 结构ID外观设计与评审
+    description: 需要产品深度参与
+    assignee: 结构工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: s-root
+    collapse_children: false
+    dependencies:
+      - p-prd
+      - h-scheme
+    labels:
+      - 结构
+    allow_rest_day_work: false
+  - uid: s-frame
+    order: 16
+    name: 结构设计锁定板框
+    description: ""
+    assignee: 结构工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: s-root
+    collapse_children: false
+    dependencies:
+      - s-id
+    labels:
+      - 结构
+    allow_rest_day_work: false
+  - uid: s-sample
+    order: 17
+    name: 结构打样
+    description: ""
+    assignee: 结构工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 7
+    parent_uid: s-root
+    collapse_children: false
+    dependencies:
+      - s-frame
+    labels:
+      - 结构
+      - 外协
+    allow_rest_day_work: true
+  - uid: s-check
+    order: 18
+    name: 结构回板试装检查
+    description: ""
+    assignee: 结构工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: s-root
+    collapse_children: false
+    dependencies:
+      - s-sample
+      - h-pcba
+    labels:
+      - 结构
+    allow_rest_day_work: false
+  - uid: w-root
+    order: 19
+    name: 软件
+    description: ""
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-scheme
+    order: 20
+    name: 软件方案设计
+    description: 含定位、感知、规划、控制、系统、地面站等模块
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - p-prd
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-review
+    order: 21
+    name: 软件方案评审
+    description: 各模块接口、交互逻辑磨合确认
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start:
+      date: 2026-03-25
+      period: am
+    latest_finish: null
+    duration_days: 3
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - w-scheme
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-dev
+    order: 22
+    name: 软件功能开发
+    description: 各模块并行开发
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 10
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - w-review
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-sim
+    order: 23
+    name: 软件仿真联调
+    description: 各模块间仿真联调
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - w-dev
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-system
+    order: 24
+    name: 系统底软与固件开发
+    description: 系统底软、生产固件、母盘
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 8
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - w-review
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: w-firmware
+    order: 25
+    name: 裸板固件部署与验证
+    description: 导入母盘，测试是否正常
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: w-root
+    collapse_children: false
+    dependencies:
+      - w-system
+      - h-check
+    labels:
+      - 软件
+    allow_rest_day_work: false
+  - uid: pr-root
+    order: 26
+    name: 生产
+    description: ""
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels:
+      - 生产
+    allow_rest_day_work: false
+  - uid: pr-assembly
+    order: 27
+    name: 生产整机试装
+    description: ""
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - h-check
+      - s-check
+      - w-firmware
+    labels:
+      - 生产
+    allow_rest_day_work: false
+  - uid: pr-tooling
+    order: 28
+    name: 工装夹具设计与制作
+    description: 装配工装、测试工装、检验工装
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 7
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - s-frame
+    labels:
+      - 生产
+      - 外协
+    allow_rest_day_work: true
+  - uid: pr-sop
+    order: 29
+    name: 工艺规程与SOP
+    description: 装配步骤、节拍、扭矩规范、检验点
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - q-pfmea
+      - pr-tooling
+    labels:
+      - 生产
+    allow_rest_day_work: false
+  - uid: pr-pilot
+    order: 30
+    name: 小批量试产
+    description: 5-10台试产，验证工艺稳定性
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 10
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - pr-sop
+      - q-iqc
+      - t-report
+    labels:
+      - 生产
+    allow_rest_day_work: true
+  - uid: pr-line
+    order: 31
+    name: 产线验证
+    description: 节拍、良率、过程能力(Cpk)达标
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - pr-pilot
+      - q-fai
+    labels:
+      - 生产
+    allow_rest_day_work: false
+  - uid: pr-mass
+    order: 32
+    name: 量产导入
+    description: 正式量产，产能爬坡
+    assignee: 生产工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 15
+    parent_uid: pr-root
+    collapse_children: false
+    dependencies:
+      - pr-line
+      - q-final
+    labels:
+      - 生产
+    allow_rest_day_work: true
+  - uid: t-root
+    order: 33
+    name: 测试与验证
+    description: ""
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-integration
+    order: 34
+    name: 软硬件集成测试
+    description: 固件烧录到真实硬件，验证接口、传感器、通信链路
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - h-check
+      - w-firmware
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-prop
+    order: 35
+    name: 动力系统测试
+    description: 电机、电调、桨叶匹配，拉力、电流、温升
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - s-check
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-func
+    order: 36
+    name: 整机功能测试
+    description: 起飞、悬停、航线、返航、避障、载荷功能
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-integration
+      - t-prop
+      - w-sim
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-perf
+    order: 37
+    name: 整机性能测试
+    description: 续航、航程、爬升率、定位精度、图传距离
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 4
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-func
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-emc
+    order: 38
+    name: EMC与电磁兼容测试
+    description: 辐射、传导、抗扰度，符合目标市场认证要求
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-func
+    labels:
+      - 测试
+      - 外协
+    allow_rest_day_work: false
+  - uid: t-env
+    order: 39
+    name: 环境与可靠性测试
+    description: 高低温、湿热、振动、跌落、盐雾
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 7
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-func
+    labels:
+      - 测试
+      - 外协
+    allow_rest_day_work: true
+  - uid: t-field
+    order: 40
+    name: 外场试飞
+    description: 真实场景飞行，集群编队、任务调度、异常处置
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 10
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-perf
+      - w-sim
+    labels:
+      - 测试
+    allow_rest_day_work: true
+  - uid: t-ota
+    order: 41
+    name: OTA升级验证
+    description: 远程升级流程、回滚、断点续传、版本一致性
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-integration
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: t-report
+    order: 42
+    name: 测试报告与问题闭环
+    description: 汇总测试结果，跟踪缺陷修复，输出准入结论
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: t-root
+    collapse_children: false
+    dependencies:
+      - t-field
+      - t-emc
+      - t-env
+      - t-ota
+    labels:
+      - 测试
+    allow_rest_day_work: false
+  - uid: q-root
+    order: 43
+    name: 质量
+    description: ""
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-plan
+    order: 44
+    name: 质量控制计划
+    description: 制定检验标准、抽样方案、放行准则
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - p-prd
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-pfmea
+    order: 45
+    name: PFMEA与防错设计
+    description: 识别装配风险，设计扭矩联锁、视觉检查等防错
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - q-plan
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-iqc
+    order: 46
+    name: 来料检验(IQC)
+    description: 关键物料抽检，建立物料追溯
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - q-plan
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-fai
+    order: 47
+    name: 首件检验(FAI)
+    description: 验证工艺能否稳定产出合格品
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - pr-assembly
+      - q-pfmea
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-process
+    order: 48
+    name: 过程巡检与智能防错
+    description: 扭矩联锁、机器视觉、AR辅助装配
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 5
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - q-fai
+    labels:
+      - 质量
+    allow_rest_day_work: true
+  - uid: q-final
+    order: 49
+    name: 整机出厂检验
+    description: 全检功能、性能、外观，生成出厂报告
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 3
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - q-process
+      - t-report
+    labels:
+      - 质量
+    allow_rest_day_work: false
+  - uid: q-dhr
+    order: 50
+    name: DHR归档与追溯
+    description: 汇总全流程检验数据，形成可追溯数字档案
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 2
+    parent_uid: q-root
+    collapse_children: false
+    dependencies:
+      - q-final
+    labels:
+      - 质量
     allow_rest_day_work: false

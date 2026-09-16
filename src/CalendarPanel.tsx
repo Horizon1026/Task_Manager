@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { CalendarYear, Project } from './model';
 import { dayNumber, dateString, makeCalendar } from './schedule';
 import { api } from './api';
+import { SearchableSelect } from './SearchableSelect';
 
 export function CalendarPanel({ project, onChange, onClose, notify }: { project: Project; onChange: (p: Project) => void; onClose: () => void; notify: (s: string) => void }) {
   const [month, setMonth] = useState(project.project.start_date.slice(0, 7));
@@ -39,7 +40,7 @@ export function CalendarPanel({ project, onChange, onClose, notify }: { project:
         const date = dateString(first - firstWeekday + i), info = calendar(date);
         return <button key={date} className={`calendar-day ${info.isWorkday ? 'workday' : 'restday'} ${date === selected ? 'selected' : ''} ${date.slice(0, 7) !== month ? 'outside' : ''}`} onClick={() => setDate(date)} aria-label={`${date} ${info.isWorkday ? '工作日' : '休息日'}`}><strong>{Number(date.slice(8))}</strong><span>{info.name}</span>{info.overridden && <i>修正</i>}</button>;
       })}</div></div>
-      <div className="calendar-edit"><h3>{selected}</h3><p className="muted">当前：{calendar(selected).isWorkday ? '工作日' : '休息日'} · {calendar(selected).name}</p><label>修正为<select aria-label="修正日期类型" value={workday ? 'work' : 'rest'} onChange={e => setWorkday(e.target.value === 'work')}><option value="work">工作日</option><option value="rest">休息日</option></select></label><label>备注<input aria-label="日历修正备注" value={note} onChange={e => setNote(e.target.value)} placeholder="例如：团队集中休息" /></label><button className="primary full-width" disabled={busy} onClick={() => apply(false)}>应用本地修正</button><button className="full-width" disabled={busy || !project.calendar.overrides.some(o => o.date === selected)} onClick={() => apply(true)}>恢复基础日历</button><p className="small muted">修正覆盖一整天的上午和下午。联网更新不会覆盖手动修正。</p></div>
+      <div className="calendar-edit"><h3>{selected}</h3><p className="muted">当前：{calendar(selected).isWorkday ? '工作日' : '休息日'} · {calendar(selected).name}</p><label>修正为<SearchableSelect label="修正日期类型" value={workday ? 'work' : 'rest'} onChange={value => setWorkday(value === 'work')} options={[{ value: 'work', label: '工作日' }, { value: 'rest', label: '休息日' }]} /></label><label>备注<input aria-label="日历修正备注" value={note} onChange={e => setNote(e.target.value)} placeholder="例如：团队集中休息" /></label><button className="primary full-width" disabled={busy} onClick={() => apply(false)}>应用本地修正</button><button className="full-width" disabled={busy || !project.calendar.overrides.some(o => o.date === selected)} onClick={() => apply(true)}>恢复基础日历</button><p className="small muted">修正覆盖一整天的上午和下午。联网更新不会覆盖手动修正。</p></div>
     </div>
     <p className="small muted">{records ? `获取时间：${new Date(records.fetched_at).toLocaleString()} · 数据源：holiday-cn` : '尚未取得有效年度数据，相关任务会标记为暂估。'} 跨年排期请加载涉及年份；年底还应检查次年安排。</p>
   </section></div>;

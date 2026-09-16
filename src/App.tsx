@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, type Snapshot } from './api';
 import { scaleNames, scales, statuses, validateProject, type Project, type Scale, type Task } from './model';
-import { moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject } from './schedule';
+import { moveSiblingTask, moveTask, setTaskParent, scheduleProject } from './schedule';
 import { Gantt } from './Gantt';
 import { TaskEditor } from './TaskEditor';
 import { CalendarPanel } from './CalendarPanel';
+import { SearchableSelect } from './SearchableSelect';
+import { useRelationDrag } from './useRelationDrag';
 
 export function App() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null), [project, setProject] = useState<Project | null>(null);
@@ -64,7 +66,7 @@ export function App() {
         event.preventDefault();
         const current = live.current.project;
         if (!current || live.current.saving) return;
-        const task: Task = { uid: crypto.randomUUID(), order: current.tasks.length + 1, name: '新任务', description: '', assignee: current.project.assignees[0] || '未指定', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, parent_uid: null, dependencies: [], labels: [], allow_rest_day_work: false };
+        const task: Task = { uid: crypto.randomUUID(), order: current.tasks.length + 1, name: '新任务', description: '', assignee: current.project.assignees[0] || '未指定', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, parent_uid: null, collapse_children: false, dependencies: [], labels: [], allow_rest_day_work: false };
         setProject({ ...current, tasks: [...current.tasks, task] }); setSelected(task.uid); setMessage('已新增任务。请编辑后保存并备份。');
       }
       if (event.key.toLowerCase() === 's') { event.preventDefault(); (document.activeElement as HTMLElement)?.blur(); setTimeout(() => void save(), 0); }
@@ -85,9 +87,10 @@ export function App() {
   function updateParent(uid: string, parent_uid: string | null) {
     if (!project) return;
     try {
-      const next = normalizeTreeOrder({ ...project, tasks: project.tasks.map(task => task.uid === uid ? { ...task, parent_uid } : task) });
-      validateProject(next); setProject(next);
-      setMessage(parent_uid === null ? '已设为根任务。请保存并备份。' : '父任务已更新，父任务排期将自动汇总。请保存并备份。');
+      const next = setTaskParent(project, uid, parent_uid);
+      const migrated = project.tasks.find(task => task.uid === parent_uid)?.dependencies.length;
+      setProject(next);
+      setMessage(parent_uid === null ? '已设为根任务。请保存并备份。' : `父任务已更新，父任务排期将自动汇总。${migrated ? '原父任务的前置依赖已迁移到此任务。' : ''}请保存并备份。`);
     } catch (error) { setMessage((error as Error).message); }
   }
   function addDependency(from: string, to: string) {
@@ -99,9 +102,15 @@ export function App() {
       validateProject(next); setProject(next); setMessage('依赖已添加，后续排期已更新。请保存并备份。');
     } catch (e) { setMessage((e as Error).message); }
   }
+  const relation = useRelationDrag(project, addDependency, (uid, parentUid) => updateParent(uid, parentUid), setMessage);
+  function toggleCollapse(uid: string) {
+    if (!project?.tasks.some(task => task.parent_uid === uid)) return;
+    setProject(current => current && { ...current, tasks: current.tasks.map(task => task.uid === uid ? { ...task, collapse_children: !task.collapse_children } : task) });
+    setSelected(uid); setMessage('子任务折叠状态已更新。请保存并备份。');
+  }
   function addTask() {
     if (!project) return;
-    const task: Task = { uid: crypto.randomUUID(), order: project.tasks.length + 1, name: '新任务', description: '', assignee: project.project.assignees[0] || '未指定', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, parent_uid: null, dependencies: [], labels: [], allow_rest_day_work: false };
+    const task: Task = { uid: crypto.randomUUID(), order: project.tasks.length + 1, name: '新任务', description: '', assignee: project.project.assignees[0] || '未指定', status: '未开始', earliest_start: null, latest_finish: null, duration_days: 1, parent_uid: null, collapse_children: false, dependencies: [], labels: [], allow_rest_day_work: false };
     setProject({ ...project, tasks: [...project.tasks, task] }); setSelected(task.uid);
   }
   function removeTask() {
@@ -149,13 +158,13 @@ export function App() {
       {unknown.length > 0 && <div className="calendar-warning">◷ 缺少 {unknown.join('、')} 年的有效日历，相关任务暂按普通周末排期。<button onClick={() => setModal('calendar')}>管理本地日历 →</button></div>}
       <fieldset className="workspace-fieldset" disabled={saving}>
         <section className="board">
-          <div className="project-file-bar"><label className="project-file-picker">项目文件<select aria-label="选择项目文件" disabled={saving || !projectFiles.length} value={snapshot?.file.split('/').pop() || ''} onChange={e => void selectProjectFile(e.target.value)}>{projectFiles.map(name => <option key={name} value={name}>{name}</option>)}</select></label></div>
+          <div className="project-file-bar"><label className="project-file-picker">项目文件<SearchableSelect label="选择项目文件" disabled={saving || !projectFiles.length} value={snapshot?.file.split('/').pop() || ''} onChange={name => void selectProjectFile(name)} options={projectFiles.map(name => ({ value: name, label: name }))} /></label></div>
           <div className="board-toolbar"><div className="view-title"><h2>任务甘特图</h2><span className="badge">{project.tasks.length} TASKS</span></div><div className="scale-switch" aria-label="时间轴粒度">{scales.map((s, i) => <button key={s} className={scale === s ? 'active' : ''} onClick={() => setScale(s)}>{scaleNames[i]}</button>)}</div></div>
-          <div className="filter-toolbar"><span className="muted small">标签筛选</span><button className={`tag ${!filter.labels.length ? 'selected' : ''}`} onClick={() => setFilter({ ...filter, labels: [] })}>全部</button>{allLabels.map(label => <button className={`tag ${filter.labels.includes(label) ? 'selected' : ''}`} key={label} onClick={() => setFilter({ ...filter, labels: filter.labels.includes(label) ? filter.labels.filter(l => l !== label) : [...filter.labels, label] })}>{label}</button>)}<select aria-label="标签匹配模式" value={filter.mode} onChange={e => setFilter({ ...filter, mode: e.target.value as 'and' | 'or' })}><option value="or">任一匹配 OR</option><option value="and">全部匹配 AND</option></select><button className="text-button default-view" onClick={() => { setProject({ ...project, project: { ...project.project, default_scale: scale, default_filter: filter } }); setMessage('当前粒度和筛选已设为项目默认值，等待保存。'); }}>设为默认视图</button></div>
-          <Gantt project={project} schedule={calculated.schedule} scale={scale} selected={selected} filter={filter} onSelect={setSelected} onChange={updateTask} onOrder={reorder} onSiblingOrder={reorderSibling} onDependency={addDependency} notify={setMessage} />
+          <div className="filter-toolbar"><span className="muted small">标签筛选</span><button className={`tag ${!filter.labels.length ? 'selected' : ''}`} onClick={() => setFilter({ ...filter, labels: [] })}>全部</button>{allLabels.map(label => <button className={`tag ${filter.labels.includes(label) ? 'selected' : ''}`} key={label} onClick={() => setFilter({ ...filter, labels: filter.labels.includes(label) ? filter.labels.filter(l => l !== label) : [...filter.labels, label] })}>{label}</button>)}<SearchableSelect label="标签匹配模式" value={filter.mode} onChange={value => setFilter({ ...filter, mode: value as 'and' | 'or' })} options={[{ value: 'or', label: '任一匹配 OR' }, { value: 'and', label: '全部匹配 AND' }]} /><button className="text-button default-view" onClick={() => { setProject({ ...project, project: { ...project.project, default_scale: scale, default_filter: filter } }); setMessage('当前粒度和筛选已设为项目默认值，等待保存。'); }}>设为默认视图</button></div>
+          <Gantt project={project} schedule={calculated.schedule} scale={scale} selected={selected} filter={filter} onSelect={setSelected} onChange={updateTask} onOrder={reorder} onSiblingOrder={reorderSibling} onToggleCollapse={toggleCollapse} relation={relation} notify={setMessage} />
           <div className="board-footer"><div className="legend">{statuses.map(s => { const color = project.project.status_colors[s]; return <span key={s}><i style={{ backgroundColor: color.fill, borderColor: color.border }} />{s}</span>; })}<span><i className="late-key" />超期</span></div><span>筛选时仅显示匹配任务及其父节点 · 选中任务显示依赖连线</span></div>
         </section>
-        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} project={project} scheduled={calculated.schedule.get(task.uid)} onChange={updateTask} onParentChange={parent_uid => updateParent(task.uid, parent_uid)} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onDelete={removeTask} onClose={() => setSelected(null)} />}
+        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} project={project} scheduled={calculated.schedule.get(task.uid)} relation={relation} onChange={updateTask} onParentChange={parent_uid => updateParent(task.uid, parent_uid)} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onAdd={addTask} onDelete={removeTask} onClose={() => setSelected(null)} />}
       </fieldset>
       <footer className="app-footer"><span className="mono" title={snapshot?.file}>{snapshot?.file}</span><span>本地优先 · YAML 数据源 · v0.1</span></footer>
     </main>

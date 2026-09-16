@@ -1,2 +1,23 @@
 /* Recursive task-tree Gantt layout. Parent bars contain their child bars. */
-.tree-gantt-body{position:relative}.tree-task-labels{position:absolute;inset:0 auto 0 0;width:260px;z-index:5;border-right:1px solid #e2e8df;background:#fff}.tree-task-labels .tree-task-cell{position:absolute;left:0;width:260px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid transparent;border-bottom-color:#edf0eb;padding-right:8px}.tree-task-labels .tree-task-cell.tree-parent-cell{align-items:flex-start;padding-top:7px;font-weight:650;background:#f7faf6;border-color:#e4eae2;border-radius:8px}.tree-task-cell .tree-branch{width:8px;color:#8da297;font-family:ui-monospace,monospace}.tree-task-cell .row-grip{font-size:16px}.tree-task-cell .task-title{min-width:0}.tree-task-cell .task-title small{margin-top:3px}.tree-task-cell.selected-row{background:#f0f8f3}.tree-task-tracks{position:absolute;top:0;bottom:0}.tree-task-tracks .parent-task-bar{background:transparent!important;border-width:2px;border-radius:8px;padding:7px 10px 0;align-items:flex-start;opacity:1}.tree-task-tracks .parent-task-bar .bar-name{align-self:flex-start;font-weight:700}.child-task-bar{height:30px;border-radius:5px}.tree-task-tracks .task-bar.muted-row,.tree-task-cell.muted-row{opacity:.42}.tree-task-tracks .task-bar.muted-row{background:#e8ebe7;border-color:#d7ddd4;color:#a1a79d}.tree-gantt-body .dependency-layer{z-index:20;color:#0a665d;pointer-events:none;overflow:visible}.tree-gantt-body .dependency-layer .dependency-halo{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.94}.tree-gantt-body .dependency-layer .dependency-arrow{fill:none;stroke:#0a665d;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px #143a3444)}.tree-gantt-body .dependency-layer .dependency-arrowhead-halo{stroke:#fff;stroke-width:6;stroke-linecap:round}.tree-gantt-body .dependency-layer .dependency-arrowhead{stroke:#0a665d;stroke-width:2.5;stroke-linecap:round}
+.tree-gantt-body{position:relative}
+.tree-task-labels{position:absolute;inset:0 auto 0 0;z-index:30;border-right:1px solid #e2e8df;background:#fff;will-change:transform}
+.tree-task-labels .tree-task-cell{position:absolute;left:0;box-sizing:border-box;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid transparent;border-bottom-color:#edf0eb;padding-right:8px}
+.tree-task-labels .tree-task-cell.tree-parent-cell{align-items:center;padding-top:0;font-weight:650;background:#f7faf6;border-color:#e4eae2;border-radius:8px}
+.tree-task-cell .tree-branch{width:8px;flex:none;color:#8da297;font-family:ui-monospace,monospace}
+.tree-task-cell .row-grip{flex:none;font-size:16px;cursor:grab}.tree-task-cell .row-grip:active{cursor:grabbing}
+.tree-task-cell .row-number{max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.tree-task-cell .task-title{min-width:0}.tree-task-cell:not(.tree-parent-cell) .task-title{display:flex;align-items:center;gap:6px}.tree-task-cell:not(.tree-parent-cell) .task-title strong{min-width:0;flex:0 1 auto}
+.tree-task-cell .task-assignee{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8a9a90;font-size:10px;font-weight:400}
+.tree-task-cell.selected-row{background:#f0f8f3}
+.tree-task-tracks{position:absolute;top:0;bottom:0}
+/* Expanded parents are containers. A collapsed parent becomes a regular status-coloured task bar. */
+.tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar){background:transparent!important;border-width:2px;border-radius:8px;padding:7px 10px 0;align-items:flex-start;opacity:1}
+.tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar) .bar-name{align-self:flex-start;font-weight:700}
+.tree-task-tracks .collapsed-parent-task-bar{border-radius:5px;padding:0 9px;align-items:center}
+.child-task-bar{height:30px;border-radius:5px}
+.tree-task-tracks .task-bar.muted-row,.tree-task-cell.muted-row{opacity:.42}.tree-task-tracks .task-bar.muted-row{background:#e8ebe7;border-color:#d7ddd4;color:#a1a79d}
+/* Keep dependency arrows above task blocks but beneath the frozen task list. */
+.tree-gantt-body .dependency-layer{z-index:20;color:#0a665d;pointer-events:none;overflow:visible}
+.tree-gantt-body .dependency-layer .dependency-halo{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.94}
+.tree-gantt-body .dependency-layer .dependency-arrow{fill:none;stroke:#0a665d;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px #143a3444)}
+.tree-gantt-body .dependency-layer .dependency-arrowhead-halo{stroke:#fff;stroke-width:6;stroke-linecap:round}.tree-gantt-body .dependency-layer .dependency-arrowhead{stroke:#0a665d;stroke-width:2.5;stroke-linecap:round}

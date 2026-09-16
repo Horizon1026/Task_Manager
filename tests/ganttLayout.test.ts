@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ganttTreeLayout } from '../src/ganttLayout';
+import { displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
 import { project, task } from './fixtures';
 
 test('tree Gantt layout nests child rectangles inside each parent rectangle', () => {
@@ -14,4 +14,29 @@ test('tree Gantt layout nests child rectangles inside each parent rectangle', ()
   assert.ok(parent.top < childA.top && parent.top + parent.height > childB.top + childB.height);
   assert.ok(childA.top < nested.top && childA.top + childA.height > nested.top + nested.height);
   assert.equal(value.height, root.top + root.height);
+});
+
+test('collapsed parents hide every descendant and retain a single row', () => {
+  const value = ganttTreeLayout(project([
+    task('parent', { collapse_children: true }), task('child', { parent_uid: 'parent' }),
+    task('nested', { parent_uid: 'child' }), task('root'),
+  ]));
+  assert.deepEqual(value.items.map(item => item.task.uid), ['parent', 'root']);
+  assert.equal(value.items[0].height, 42);
+});
+
+test('dependency display projects hidden endpoints, removes internal loops and deduplicates edges', () => {
+  const p = project([
+    task('left', { collapse_children: true }),
+    task('left-a', { parent_uid: 'left' }),
+    task('left-b', { parent_uid: 'left', dependencies: ['left-a'] }),
+    task('right', { collapse_children: true }),
+    task('right-a', { parent_uid: 'right', dependencies: ['left-a'] }),
+    task('right-b', { parent_uid: 'right', dependencies: ['left-b'] }),
+    task('external', { dependencies: ['left-a'] }),
+  ]);
+  assert.deepEqual(displayDependencyEdges(p, new Set(['left', 'right', 'external'])), [
+    { from: 'left', to: 'right' },
+    { from: 'left', to: 'external' },
+  ]);
 });

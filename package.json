@@ -11,6 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "pinyin-match": "1.2.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "yaml": "^2.7.0",

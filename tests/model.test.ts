@@ -22,3 +22,9 @@ test('task assignees must be selected from the project assignee list', () => {
   configured.tasks[0].assignee = '名单外成员';
   assert.throws(() => validateProject(configured), /不在项目名单/);
 });
+
+test('collapse_children defaults to false for legacy tasks', () => {
+  const legacy = JSON.parse(JSON.stringify(project()));
+  delete legacy.tasks[0].collapse_children;
+  assert.equal(validateProject(legacy).tasks[0].collapse_children, false);
+});

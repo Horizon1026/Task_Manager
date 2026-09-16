@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from 'yaml';
+import { selectChoice } from './select';
 
 test.beforeEach(async ({ page, request }) => {
   await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
@@ -10,10 +11,11 @@ test.beforeEach(async ({ page, request }) => {
 });
 test('selects a YAML project file from the workspace picker', async ({ page }) => {
   const picker = page.getByLabel('选择项目文件');
-  await expect(picker.locator('option')).toHaveCount(2);
-  await picker.selectOption('project_c5.yaml');
+  await picker.click();
+  await expect(page.getByRole('option')).toHaveCount(2);
+  await selectChoice(page, '选择项目文件', 'project_c5.yaml');
   await expect(page.getByRole('heading', { name: 'C5 项目' })).toBeVisible();
-  await picker.selectOption('project.yaml');
+  await selectChoice(page, '选择项目文件', 'project.yaml');
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
 });
 async function taskDetails(page: Page, name: string) { await page.getByRole('button', { name, exact: false }).filter({ has: page.locator('strong') }).first().click(); }
@@ -95,6 +97,20 @@ test('Ctrl+N creates a task and opens its details', async ({ page }) => {
   await expect(page.getByLabel('任务名称', { exact: true })).toHaveValue('新任务');
   await expect(page.locator('.task-bar')).toHaveCount(7);
 });
+test('task details header can create another task without discarding the current draft', async ({ page }) => {
+  await taskDetails(page, '需求梳理');
+  const oldUid = await page.getByLabel('任务 UID').inputValue();
+  await page.getByLabel('任务名称', { exact: true }).fill('尚未保存的名称');
+  await page.getByRole('button', { name: '新建任务', exact: true }).click();
+  await expect(page.locator('.task-bar')).toHaveCount(7);
+  await expect(page.getByLabel('任务名称', { exact: true })).toHaveValue('新任务');
+  await expect(page.getByLabel('排序 ID')).toHaveValue('7');
+  await expect(page.getByLabel('任务 UID')).not.toHaveValue(oldUid);
+  await expect(page.getByTestId('save-state')).toContainText('未保存');
+  await page.getByRole('button', { name: '关闭任务详情' }).click();
+  await taskDetails(page, '尚未保存的名称');
+  await expect(page.getByLabel('任务 UID')).toHaveValue(oldUid);
+});
 test('edits are drafts; Ctrl+S saves edited content and matching backup', async ({ page, request }) => {
   await taskDetails(page, '需求梳理'); await page.getByLabel('任务名称', { exact: true }).fill('浏览器测试任务');
   await expect(page.getByTestId('save-state')).toContainText('未保存');
@@ -115,7 +131,7 @@ test('external YAML refreshes clean view and warns without discarding dirty draf
 test('calendar local override recalculates preview and persists with project', async ({ page, request }) => {
   await page.getByRole('button', { name: '本地日历', exact: true }).click();
   await page.getByRole('button', { name: '2026-09-14 工作日', exact: true }).click();
-  await page.getByLabel('修正日期类型').selectOption('rest'); await page.getByLabel('日历修正备注').fill('团队休息');
+  await selectChoice(page, '修正日期类型', 'rest'); await page.getByLabel('日历修正备注').fill('团队休息');
   await page.getByRole('button', { name: '应用本地修正' }).click(); await page.getByRole('button', { name: '关闭日历', exact: true }).click();
   await taskDetails(page, '需求梳理'); await expect(page.locator('.computed')).toContainText('2026-09-15 上午');
   await page.getByRole('button', { name: '保存并备份', exact: false }).click(); await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
@@ -123,7 +139,7 @@ test('calendar local override recalculates preview and persists with project', a
 });
 test('task CRUD and reorder preserve UID references', async ({ page, request }) => {
   await page.getByRole('button', { name: '新增任务', exact: false }).click();
-  await page.getByLabel('任务名称', { exact: true }).fill('新增验证'); await page.getByLabel('执行人', { exact: true }).selectOption('测试员');
+  await page.getByLabel('任务名称', { exact: true }).fill('新增验证'); await selectChoice(page, '执行人', '测试员');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   await page.getByRole('button', { name: '上移 新增验证', exact: true }).click({ force: true });
   await page.getByRole('button', { name: '保存并备份', exact: false }).click(); await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
@@ -137,13 +153,15 @@ test('parent selection creates a container, prevents descendant cycles, and pers
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   await page.getByRole('button', { name: '新增任务', exact: false }).click();
   await page.getByLabel('任务名称', { exact: true }).fill('子级验证任务');
-  await page.getByLabel('父任务').selectOption(parentUid);
+  await selectChoice(page, '父任务', parentUid);
   await expect(page.getByRole('status')).toContainText('父任务已更新');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   await taskDetails(page, '父级验证任务');
   await expect(page.getByLabel('预计耗时（天）')).toBeDisabled();
   await expect(page.getByRole('button', { name: '删除任务', exact: true })).toBeDisabled();
-  await expect(page.getByLabel('父任务')).not.toContainText('子级验证任务');
+  await page.getByLabel('父任务', { exact: true }).fill('子级验证任务');
+  await expect(page.getByRole('option')).toHaveCount(0);
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   const parentBar = (await page.getByRole('button', { name: '任务条 父级验证任务' }).boundingBox())!;
   const childBar = (await page.getByRole('button', { name: '任务条 子级验证任务' }).boundingBox())!;
@@ -178,7 +196,7 @@ test('parent selection creates a container, prevents descendant cycles, and pers
   expect(child.parent_uid).toBe(parent.uid);
 });
 test('dependency dropdown prevents cycles and allows removing an edge', async ({ page }) => {
-  await taskDetails(page, '需求梳理'); await page.getByLabel('选择前置任务').selectOption('task-qa'); await page.getByRole('button', { name: '添加', exact: true }).click();
+  await taskDetails(page, '需求梳理'); await selectChoice(page, '选择前置任务', 'task-qa'); await page.getByRole('button', { name: '添加', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('循环依赖');
   await page.getByRole('button', { name: '关闭任务详情' }).click(); await taskDetails(page, '交互与视觉设计');
   await page.getByRole('button', { name: '移除依赖 task-discovery' }).click(); await expect(page.locator('.computed')).toContainText('2026-09-14 上午');
@@ -189,7 +207,7 @@ test('mouse drag moves by half-day, right handle changes duration, and blocked d
   await page.getByRole('button', { name: '天', exact: true }).click();
   const bar = page.getByTestId('bar-task-discovery'); let box = (await bar.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + 16); await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 + 36, box.y + 16, { steps: 8 }); await page.mouse.up();
-  await taskDetails(page, '需求梳理'); await expect(page.getByLabel('最早可开始时间', { exact: true })).toHaveValue('2026-09-14'); await expect(page.getByLabel('最早可开始时间时段')).toHaveValue('pm');
+  await taskDetails(page, '需求梳理'); await expect(page.getByLabel('最早可开始时间', { exact: true })).toHaveValue('2026-09-14'); await expect(page.getByLabel('最早可开始时间时段')).toHaveValue('下午');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   box = (await bar.boundingBox())!; await page.mouse.move(box.x + box.width - 3, box.y + 16); await page.mouse.down(); await page.mouse.move(box.x + box.width + 33, box.y + 16, { steps: 8 }); await page.mouse.up();
   await taskDetails(page, '需求梳理'); await expect(page.getByLabel('预计耗时（天）')).toHaveValue(String(initialDuration + 0.5)); await page.getByRole('button', { name: '关闭任务详情' }).click();
@@ -200,9 +218,19 @@ test('mouse drag moves by half-day, right handle changes duration, and blocked d
   const data = await (await request.get('/api/project')).json(); expect(data.project.tasks[1].earliest_start).toBeNull();
 });
 test('right-button arrow adds dependency, then backup can restore earlier content', async ({ page, request }) => {
-  const a = (await page.getByTestId('bar-task-design').boundingBox())!, b = (await page.getByTestId('bar-task-engine').boundingBox())!;
-  await page.mouse.move(a.x + a.width / 2, a.y + 16); await page.mouse.down({ button: 'right' });
-  await page.mouse.move(b.x + b.width / 2, b.y + 16, { steps: 10 }); await expect(page.locator('.drag-arrow')).toBeVisible(); await page.mouse.up({ button: 'right' });
+  const prerequisite = (await page.getByTestId('bar-task-design').boundingBox())!, dependent = (await page.getByTestId('bar-task-engine').boundingBox())!;
+  await page.mouse.move(dependent.x + dependent.width / 2, dependent.y + 16); await page.mouse.down({ button: 'right' });
+  await page.mouse.move(prerequisite.x + prerequisite.width / 2, prerequisite.y + 16, { steps: 10 });
+  const endpoints = await page.locator('.drag-arrow > path').evaluate(path => {
+    const value = path as SVGPathElement, length = value.getTotalLength();
+    const start = value.getPointAtLength(0), end = value.getPointAtLength(length);
+    return { start: { x: start.x, y: start.y }, end: { x: end.x, y: end.y } };
+  });
+  expect(endpoints.start.x).toBeCloseTo(prerequisite.x + prerequisite.width / 2, 0);
+  expect(endpoints.start.y).toBeCloseTo(prerequisite.y + 16, 0);
+  expect(endpoints.end.x).toBeCloseTo(dependent.x + dependent.width / 2, 0);
+  expect(endpoints.end.y).toBeCloseTo(dependent.y + 16, 0);
+  await page.mouse.up({ button: 'right' });
   await expect(page.getByRole('status')).toContainText('依赖已添加');
   await page.getByRole('button', { name: '保存并备份', exact: false }).click(); await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
   const data = await (await request.get('/api/project')).json(); expect(data.project.tasks[2].dependencies).toContain('task-design');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProject } from '../src/model';
-import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, toSlot } from '../src/schedule';
+import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, setTaskParent, toSlot } from '../src/schedule';
 import { alignStart, timeColumns } from '../src/timeline';
 import { project, task } from './fixtures';
 
@@ -76,6 +76,45 @@ test('moving rows preserves UIDs and dependencies, reindexes and sorts YAML orde
   const p = moveTask(project([task('a'), task('b', { dependencies: ['a'] })]), 'b', 1);
   assert.deepEqual(p.tasks.map(t => [t.uid, t.order]), [['b', 1], ['a', 2]]);
   assert.deepEqual(p.tasks[0].dependencies, ['a']); validateProject(p);
+});
+test('first child receives all parent prerequisites, merged without duplicates; later children keep their own', () => {
+  const original = project([task('a', { dependencies: ['b', 'e'] }), task('b'), task('c', { dependencies: ['e', 'f'], duration_days: 2 }), task('d', { dependencies: ['f'] }), task('e'), task('f')]);
+  const before = structuredClone(original);
+  const first = setTaskParent(original, 'c', 'a');
+  assert.deepEqual(first.tasks.find(t => t.uid === 'a')!.dependencies, []);
+  assert.deepEqual(first.tasks.find(t => t.uid === 'c'), { ...original.tasks[2], parent_uid: 'a', order: 2, dependencies: ['e', 'f', 'b'] });
+  assert.deepEqual(original, before);
+  const second = setTaskParent(first, 'd', 'a');
+  assert.deepEqual(second.tasks.find(t => t.uid === 'd')!.dependencies, ['f']);
+  assert.deepEqual(second.tasks.find(t => t.uid === 'c')!.dependencies, ['e', 'f', 'b']);
+  assert.deepEqual(second.tasks.map(t => t.order), [1, 2, 3, 4, 5, 6]);
+  assert.equal(scheduleProject(second).get('c')!.dependencyFloor, scheduleProject(second).get('b')!.end);
+});
+test('detaching does not restore prerequisites and reparenting a subtree preserves its children', () => {
+  const first = setTaskParent(project([task('a', { dependencies: ['b'] }), task('b'), task('c'), task('d')]), 'c', 'a');
+  assert.equal(setTaskParent(first, 'c', 'a'), first);
+  const detached = setTaskParent(first, 'c', null);
+  assert.deepEqual(detached.tasks.find(t => t.uid === 'a')!.dependencies, []);
+  assert.deepEqual(detached.tasks.find(t => t.uid === 'c')!.dependencies, ['b']);
+  assert.deepEqual(setTaskParent(detached, 'd', 'a').tasks.find(t => t.uid === 'd')!.dependencies, []);
+  const moved = setTaskParent(first, 'a', 'd');
+  assert.deepEqual(moved.tasks.map(t => t.uid), ['b', 'd', 'a', 'c']);
+  assert.equal(moved.tasks.find(t => t.uid === 'c')!.parent_uid, 'a');
+});
+test('invalid dependency migration and parent cycles fail atomically without losing tasks', () => {
+  const cases: [ReturnType<typeof project>, string, string, RegExp][] = [
+    [project([task('a', { dependencies: ['b'] }), task('b'), task('c'), task('e', { dependencies: ['a'] })]), 'c', 'a', /不能依赖父任务/],
+    [project([task('a', { dependencies: ['b'] }), task('b', { dependencies: ['c'] }), task('c')]), 'c', 'a', /循环依赖/],
+    [project([task('a', { dependencies: ['c'] }), task('c')]), 'c', 'a', /循环依赖/],
+    [project([task('a', { dependencies: ['b'] }), task('b'), task('c'), task('d', { parent_uid: 'c' })]), 'c', 'a', /不能承接/],
+    [project([task('a'), task('c', { parent_uid: 'a' })]), 'a', 'c', /循环父子关系/],
+    [project(), 'a', 'a', /自身/], [project(), 'a', 'missing', /不存在/], [project(), 'missing', 'a', /不存在/],
+  ];
+  for (const [value, uid, parent, message] of cases) {
+    const before = structuredClone(value);
+    assert.throws(() => setTaskParent(value, uid, parent), message);
+    assert.deepEqual(value, before);
+  }
 });
 test('tree order keeps each parent subtree contiguous while preserving sibling order', () => {
   const p = project([

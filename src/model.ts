@@ -23,6 +23,7 @@ export const taskSchema = z.object({
   duration_days: z.number().min(0.5).max(36500).multipleOf(0.5),
   // Optional on input for backward-compatible loading of existing project snapshots.
   parent_uid: z.string().min(1).max(100).nullable().default(null),
+  collapse_children: z.boolean().default(false),
   dependencies: z.array(z.string()).max(5000), labels: z.array(z.string().min(1).max(100)).max(100),
   allow_rest_day_work: z.boolean(),
 }).strict();
