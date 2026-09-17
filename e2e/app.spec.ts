@@ -41,7 +41,58 @@ test('loads seven scales, colors, muted filtering and read-only UID', async ({ p
   await page.getByTestId('bar-task-engine').click();
   await expect(page.locator('.dependency-arrow')).toHaveCount(2);
   await expect(page.locator('.dependency-arrowhead')).toHaveCount(2);
+  await expect(page.locator('.dependency-halo')).toHaveCount(0);
+  await expect(page.locator('.dependency-arrowhead-halo')).toHaveCount(0);
+  expect(await page.locator('.dependency-arrow').first().evaluate(node => getComputedStyle(node).filter)).not.toBe('none');
   await expect(page.locator('.dependency-layer')).toHaveCSS('z-index', '20');
+});
+test('expands the workspace and timeline to a wide browser viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 2200, height: 1000 });
+  await expect.poll(async () => (await page.locator('main').boundingBox())?.width).toBeCloseTo(2200, 0);
+  const scrollWidth = await page.locator('.gantt-scroll').evaluate(node => node.clientWidth);
+  const taskListWidth = await page.locator('.tree-task-labels').evaluate(node => node.getBoundingClientRect().width);
+  await expect.poll(async () => (await page.locator('.time-heading').boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(scrollWidth - taskListWidth);
+});
+test('holding M focuses direct dependencies in read-only mode and releasing it restores the view', async ({ page }) => {
+  const resize = (await page.getByRole('separator', { name: '调整任务列表宽度' }).boundingBox())!;
+  await page.mouse.move(resize.x, resize.y + resize.height / 2);
+  await page.mouse.down(); await page.mouse.move(resize.x + 120, resize.y + resize.height / 2, { steps: 6 }); await page.mouse.up();
+  const scroll = page.locator('.gantt-scroll');
+  await scroll.evaluate(node => { node.scrollLeft = 60; });
+  await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBe(60);
+  const bar = page.getByTestId('bar-task-design');
+  await bar.hover();
+  await page.keyboard.down('m');
+  await expect(page.locator('.gantt-section')).toHaveClass(/dependency-focus-mode/);
+  await expect(page.locator('.gantt-caption')).toContainText('交互与视觉设计');
+  await expect(page.locator('.task-bar')).toHaveCount(3);
+  await expect(page.getByTestId('bar-task-discovery')).toBeVisible();
+  await expect(page.getByTestId('bar-task-design')).toBeVisible();
+  await expect(page.getByTestId('bar-task-gantt')).toBeVisible();
+  await expect(page.getByTestId('bar-task-engine')).toHaveCount(0);
+  await expect(page.locator('.dependency-arrow')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: '新增任务', exact: false })).toBeDisabled();
+
+  const focused = (await page.getByTestId('bar-task-design').boundingBox())!;
+  await page.mouse.move(focused.x + focused.width / 2, focused.y + 15);
+  await page.mouse.down(); await page.mouse.move(focused.x + focused.width / 2 - 100, focused.y + 15, { steps: 8 }); await page.mouse.up();
+  await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBeGreaterThan(60);
+  await expect(page.getByLabel('任务详情编辑')).toHaveCount(0);
+  await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
+
+  await page.keyboard.up('m');
+  await expect(page.locator('.gantt-section')).not.toHaveClass(/dependency-focus-mode/);
+  await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBe(60);
+  await expect(page.locator('.task-bar')).toHaveCount(6);
+  await expect(page.locator('.dependency-arrow')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '新增任务', exact: false })).toBeEnabled();
+
+  await page.getByTestId('bar-task-design').click();
+  await expect(page.getByLabel('任务详情编辑')).toBeVisible();
+  await page.getByTestId('bar-task-design').hover();
+  await page.keyboard.down('m');
+  await expect(page.locator('.gantt-section')).not.toHaveClass(/dependency-focus-mode/);
+  await page.keyboard.up('m');
 });
 test('freezes and resizes the left task list', async ({ page }) => {
   const taskList = page.locator('.tree-task-labels');
@@ -91,12 +142,6 @@ test('blank Gantt canvas closes task details and supports horizontal panning', a
   await page.mouse.down(); await page.mouse.move(blank!.x - 120, blank!.y, { steps: 6 }); await page.mouse.up();
   await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
 });
-test('Ctrl+N creates a task and opens its details', async ({ page }) => {
-  await page.keyboard.press('Control+n');
-  await expect(page.getByLabel('任务详情编辑')).toBeVisible();
-  await expect(page.getByLabel('任务名称', { exact: true })).toHaveValue('新任务');
-  await expect(page.locator('.task-bar')).toHaveCount(7);
-});
 test('task details header can create another task without discarding the current draft', async ({ page }) => {
   await taskDetails(page, '需求梳理');
   const oldUid = await page.getByLabel('任务 UID').inputValue();
@@ -104,6 +149,7 @@ test('task details header can create another task without discarding the current
   await page.getByRole('button', { name: '新建任务', exact: true }).click();
   await expect(page.locator('.task-bar')).toHaveCount(7);
   await expect(page.getByLabel('任务名称', { exact: true })).toHaveValue('新任务');
+  await expect(page.getByLabel('预计耗时（天）')).toHaveValue('2');
   await expect(page.getByLabel('排序 ID')).toHaveValue('7');
   await expect(page.getByLabel('任务 UID')).not.toHaveValue(oldUid);
   await expect(page.getByTestId('save-state')).toContainText('未保存');

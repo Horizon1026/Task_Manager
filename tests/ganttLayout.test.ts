@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
+import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
 import { project, task } from './fixtures';
 
 test('tree Gantt layout nests child rectangles inside each parent rectangle', () => {
@@ -39,4 +39,19 @@ test('dependency display projects hidden endpoints, removes internal loops and d
     { from: 'left', to: 'right' },
     { from: 'left', to: 'external' },
   ]);
+});
+
+test('dependency focus keeps one-hop neighbors and structural ancestors, and rolls up a parent subtree', () => {
+  const p = project([
+    task('before'), task('group'), task('inside-a', { parent_uid: 'group', dependencies: ['before'] }),
+    task('inside-b', { parent_uid: 'group', dependencies: ['inside-a'] }),
+    task('after', { dependencies: ['inside-b'] }), task('far', { dependencies: ['after'] }), task('unrelated'),
+  ]);
+  const leaf = dependencyFocus(p, 'after');
+  assert.deepEqual([...leaf.coreUids], ['after', 'inside-b', 'far']);
+  assert.deepEqual([...leaf.visibleUids], ['after', 'inside-b', 'far', 'group']);
+  const parent = dependencyFocus(p, 'group');
+  assert.deepEqual([...parent.coreUids], ['group', 'before', 'after']);
+  assert.deepEqual([...parent.visibleUids], ['group', 'before', 'after']);
+  assert.deepEqual([...parent.memberUids].sort(), ['group', 'inside-a', 'inside-b']);
 });

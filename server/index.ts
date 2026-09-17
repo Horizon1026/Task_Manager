@@ -4,10 +4,12 @@ import { basename, dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ProjectStore, HttpError } from './store';
 import { downloadYear } from './holidays';
+import { parseTaskDefaults } from './taskDefaults';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4310);
 const initialFile = resolve(process.env.TASK_MANAGER_FILE || resolve(root, 'data/project.yaml'));
+const taskDefaultsFile = resolve(process.env.TASK_MANAGER_DEFAULTS_FILE || resolve(root, 'task_defaults.yaml'));
 const projectDir = dirname(initialFile);
 let store = new ProjectStore(initialFile);
 const dev = process.argv.includes('--dev');
@@ -37,6 +39,7 @@ const server = createServer(async (req, res) => {
       if (origin && ![`http://localhost:${port}`, `http://127.0.0.1:${port}`].includes(origin)) throw new HttpError(403, '拒绝跨站请求');
       if (req.headers['sec-fetch-site'] === 'cross-site') throw new HttpError(403, '拒绝跨站请求');
       if (req.method === 'GET' && url.pathname === '/api/project') return json(res, 200, await store.read());
+      if (req.method === 'GET' && url.pathname === '/api/task-defaults') return json(res, 200, parseTaskDefaults(await readFile(taskDefaultsFile, 'utf8')));
       if (req.method === 'GET' && url.pathname === '/api/projects') return json(res, 200, { projects: await projectFiles(), active: basename(store.file) });
       if (req.method === 'POST' && url.pathname === '/api/projects/select') { const data = await body(req); return json(res, 200, await selectProject(data.name)); }
       if (req.method === 'GET' && url.pathname === '/api/backups') return json(res, 200, { backups: await store.list() });

@@ -1,0 +1,10 @@
+name: 新任务
+description: ""
+assignee: null
+status: 未开始
+earliest_start: null
+latest_finish: null
+duration_days: 2
+collapse_children: false
+labels: []
+allow_rest_day_work: false

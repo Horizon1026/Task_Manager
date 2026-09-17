@@ -93,20 +93,31 @@ export function scheduleProject(input: Project): Map<string, Scheduled> {
   return result;
 }
 
-/** Reparent atomically; the first child takes over a leaf parent's prerequisites. */
+/** Reparent atomically; the first child takes over every dependency edge of a leaf parent. */
 export function setTaskParent(project: Project, uid: string, parentUid: string | null): Project {
   const task = project.tasks.find(value => value.uid === uid);
   const parent = project.tasks.find(value => value.uid === parentUid);
   if (!task || (parentUid !== null && !parent)) throw new Error('任务或父任务不存在');
   if (uid === parentUid) throw new Error('不能将任务设为自身的父任务');
   if (task.parent_uid === parentUid) return project;
-  const inherited = parent && !project.tasks.some(value => value.parent_uid === parentUid) ? parent.dependencies : [];
-  if (inherited.length && project.tasks.some(value => value.parent_uid === uid)) {
-    throw new Error('接收任务已有子任务，不能承接前置依赖；请选择叶子任务');
+  const firstChild = parent !== undefined && !project.tasks.some(value => value.parent_uid === parentUid);
+  const inherited = firstChild ? parent.dependencies : [];
+  const hasDependents = firstChild && project.tasks.some(value => value.dependencies.includes(parentUid!));
+  if ((inherited.length || hasDependents) && project.tasks.some(value => value.parent_uid === uid)) {
+    throw new Error('接收任务已有子任务，不能承接前置依赖或被依赖关系；请选择叶子任务');
   }
-  const next = { ...project, tasks: project.tasks.map(value =>
-    value.uid === uid ? { ...value, parent_uid: parentUid, dependencies: [...new Set([...value.dependencies, ...inherited])] }
-      : value.uid === parentUid && inherited.length ? { ...value, dependencies: [] } : value) };
+  const next = { ...project, tasks: project.tasks.map(value => {
+    let dependencies = value.dependencies;
+    if (firstChild) {
+      if (value.uid === parentUid) dependencies = [];
+      else {
+        const combined = value.uid === uid ? [...dependencies, ...inherited] : dependencies;
+        dependencies = [...new Set(combined.map(dependency => dependency === parentUid ? uid : dependency))];
+      }
+    }
+    return value.uid === uid ? { ...value, parent_uid: parentUid, dependencies }
+      : dependencies !== value.dependencies ? { ...value, dependencies } : value;
+  }) };
   // Validate before tree traversal: invalid parent cycles must never drop tasks.
   return normalizeTreeOrder(validateProject(next));
 }

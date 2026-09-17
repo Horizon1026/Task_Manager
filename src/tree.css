@@ -17,7 +17,6 @@
 .child-task-bar{height:30px;border-radius:5px}
 .tree-task-tracks .task-bar.muted-row,.tree-task-cell.muted-row{opacity:.42}.tree-task-tracks .task-bar.muted-row{background:#e8ebe7;border-color:#d7ddd4;color:#a1a79d}
 /* Keep dependency arrows above task blocks but beneath the frozen task list. */
-.tree-gantt-body .dependency-layer{z-index:20;color:#0a665d;pointer-events:none;overflow:visible}
-.tree-gantt-body .dependency-layer .dependency-halo{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.94}
-.tree-gantt-body .dependency-layer .dependency-arrow{fill:none;stroke:#0a665d;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 1px #143a3444)}
-.tree-gantt-body .dependency-layer .dependency-arrowhead-halo{stroke:#fff;stroke-width:6;stroke-linecap:round}.tree-gantt-body .dependency-layer .dependency-arrowhead{stroke:#0a665d;stroke-width:2.5;stroke-linecap:round}
+.tree-gantt-body .dependency-layer{z-index:20;color:#087f73;pointer-events:none;overflow:visible}
+.tree-gantt-body .dependency-layer .dependency-arrow{fill:none;stroke:#087f73;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px #20d6b8) drop-shadow(0 0 5px #20d6b899)}
+.tree-gantt-body .dependency-layer .dependency-arrowhead{stroke:#087f73;stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 2px #20d6b8) drop-shadow(0 0 5px #20d6b899)}

@@ -97,6 +97,23 @@ project:
 
 任务中的 `assignee` 必须是此名单的成员。旧项目缺少 `assignees` 时，会根据已有任务自动生成名单，并会在下次保存时写入 YAML。
 
+新建任务的可编辑默认值由根目录的 `task_defaults.yaml` 提供。每次点击新建时都会重新读取，因此修改后无需重启：
+
+```yaml
+name: 新任务
+description: ""
+assignee: null            # null 表示使用当前项目的第一个执行人
+status: 未开始
+earliest_start: null
+latest_finish: null
+duration_days: 2
+collapse_children: false
+labels: []
+allow_rest_day_work: false
+```
+
+UID、排序 ID、父任务和依赖关系不在模板中，始终由系统为新任务生成。如果 `assignee` 填写了具体姓名，该值必须存在于当前项目的 `assignees` 名单中。模板缺少字段、存在未知字段或值无效时，新建操作会被拒绝并在界面显示错误。可通过 `TASK_MANAGER_DEFAULTS_FILE=/path/to/defaults.yaml` 使用其他模板路径。
+
 ## 验证
 
 ```bash
@@ -105,7 +122,7 @@ npm run build
 npm run test:e2e
 ```
 
-当前验证结果：34 个单元测试、31 个 Chrome 端到端测试全部通过。
+当前验证结果：40 个单元测试、32 个 Chrome 端到端测试全部通过。
 
 本机运行开发命令和测试时，先在当前终端设置运行环境：
 

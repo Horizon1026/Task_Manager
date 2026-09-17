@@ -40,7 +40,11 @@ async function dragFromDetails(page: Page, target: string, parent = false) {
   await page.mouse.move(row.x + 15, row.y + row.height / 2, { steps: 8 });
 }
 
-test('dropdown migrates prerequisites only to the first child and persists on explicit save', async ({ page, request }) => {
+test('dropdown migrates both dependency directions only to the first child and persists on explicit save', async ({ page, request }) => {
+  const initial = await (await request.get('/api/project')).json();
+  initial.project.tasks.push(task('e', { order: 5, dependencies: ['a'], duration_days: 2 }));
+  await writeFile(initial.file, stringify(initial.project));
+  await page.reload();
   await details(page, 'c');
   await selectChoice(page, '父任务', 'a');
   await expect(page.locator('.dependency-list')).toContainText('b');
@@ -54,10 +58,11 @@ test('dropdown migrates prerequisites only to the first child and persists on ex
   await page.keyboard.press('Control+s');
   await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
   const { project: saved } = await (await request.get('/api/project')).json();
-  expect(saved.tasks.map((t: { uid: string }) => t.uid)).toEqual(['a', 'c', 'd', 'b']);
+  expect(saved.tasks.map((t: { uid: string }) => t.uid)).toEqual(['a', 'c', 'd', 'b', 'e']);
   expect(saved.tasks[0].dependencies).toEqual([]);
   expect(saved.tasks[1].dependencies).toEqual(['b']);
   expect(saved.tasks[2].dependencies).toEqual([]);
+  expect(saved.tasks.find((t: { uid: string }) => t.uid === 'e').dependencies).toEqual(['c']);
   await page.reload();
   await details(page, 'c');
   await expect(page.getByLabel('父任务', { exact: true })).toHaveValue('1. a');
@@ -189,8 +194,10 @@ test('double-clicking a parent row collapses descendants, projects dependencies,
   await details(page, 'd');
   await selectChoice(page, '父任务', 'a');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
-
   const parentRow = page.locator('.tree-task-cell[data-task-uid="a"] .task-title');
+  await parentRow.hover();
+  await expect(page.locator('.hover-card')).toHaveCount(0);
+
   await parentRow.dblclick();
   await expect(page.getByTestId('bar-c')).toHaveCount(0);
   await expect(page.getByTestId('bar-d')).toHaveCount(0);

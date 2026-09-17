@@ -3,6 +3,7 @@ import type { Project, Task } from './model';
 export type GanttTreeItem = { task: Task; depth: number; top: number; height: number; isParent: boolean };
 export type GanttTreeLayout = { items: GanttTreeItem[]; height: number };
 export type DisplayDependencyEdge = { from: string; to: string };
+export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>; memberUids: Set<string> };
 
 const LEAF_HEIGHT = 42;
 const SIBLING_GAP = 6;
@@ -58,4 +59,33 @@ export function displayDependencyEdges(project: Project, visibleUids: Set<string
     if (!seen.has(key)) { seen.add(key); result.push({ from, to }); }
   }
   return result;
+}
+
+/** Finds one-hop external dependencies and the ancestor paths needed to render them as a tree. */
+export function dependencyFocus(project: Project, uid: string): DependencyFocus {
+  const byUid = new Map(project.tasks.map(task => [task.uid, task]));
+  const children = new Map<string, string[]>();
+  for (const task of project.tasks) if (task.parent_uid !== null) {
+    const value = children.get(task.parent_uid) ?? [];
+    value.push(task.uid); children.set(task.parent_uid, value);
+  }
+  const memberUids = new Set([uid]), pending = [...(children.get(uid) ?? [])];
+  while (pending.length) {
+    const child = pending.pop()!;
+    if (memberUids.has(child)) continue;
+    memberUids.add(child); pending.push(...(children.get(child) ?? []));
+  }
+  const coreUids = new Set([uid]);
+  for (const task of project.tasks) for (const dependency of task.dependencies) {
+    const fromInside = memberUids.has(dependency), toInside = memberUids.has(task.uid);
+    if (fromInside !== toInside) coreUids.add(fromInside ? task.uid : dependency);
+  }
+  const visibleUids = new Set(coreUids);
+  for (const coreUid of coreUids) {
+    let parent = byUid.get(coreUid)?.parent_uid ?? null;
+    while (parent !== null) {
+      visibleUids.add(parent); parent = byUid.get(parent)?.parent_uid ?? null;
+    }
+  }
+  return { coreUids, visibleUids, memberUids };
 }

@@ -141,7 +141,7 @@ test('open choices follow external YAML updates; rejected parent assignment reta
   await expect(page.getByRole('option', { name: '新成员', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await selectChoice(page, '父任务', 'task-design');
-  await expect(page.getByRole('status')).toContainText('不能依赖父任务');
+  await expect(page.getByRole('status')).toContainText('循环依赖');
   await expect(page.getByRole('combobox', { name: '父任务', exact: true })).toHaveValue('无（根任务）');
   await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
 });

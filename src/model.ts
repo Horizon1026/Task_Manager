@@ -27,6 +27,10 @@ export const taskSchema = z.object({
   dependencies: z.array(z.string()).max(5000), labels: z.array(z.string().min(1).max(100)).max(100),
   allow_rest_day_work: z.boolean(),
 }).strict();
+export const taskDefaultsSchema = taskSchema.pick({
+  name: true, description: true, status: true, earliest_start: true, latest_finish: true,
+  duration_days: true, collapse_children: true, labels: true, allow_rest_day_work: true,
+}).extend({ assignee: z.string().trim().min(1).max(200).nullable() }).strict();
 const holiday = z.object({ date, name: z.string(), isOffDay: z.boolean() }).strict();
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, '颜色必须为 #RRGGBB 格式');
 const statusColor = z.object({ fill: color, border: color, text: color }).strict();
@@ -59,6 +63,7 @@ export const projectSchema = z.object({
 }).strict();
 export type Project = z.infer<typeof projectSchema>;
 export type Task = z.infer<typeof taskSchema>;
+export type TaskDefaults = z.infer<typeof taskDefaultsSchema>;
 export type HalfDay = z.infer<typeof momentSchema>;
 export type CalendarYear = z.infer<typeof yearSchema>;
 export type Scale = typeof scales[number];
