@@ -6,6 +6,7 @@ project:
   default_filter:
     labels: []
     mode: or
+  allow_assignee_parallel_tasks: true
   assignees: [小林, 小陈, 你, 测试员]
 calendar:
   years: []

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
 import { project, task } from './fixtures';
+import { scheduleProjectPlan } from '../src/schedule';
 
 test('tree Gantt layout nests child rectangles inside each parent rectangle', () => {
   const value = ganttTreeLayout(project([
@@ -36,8 +37,8 @@ test('dependency display projects hidden endpoints, removes internal loops and d
     task('external', { dependencies: ['left-a'] }),
   ]);
   assert.deepEqual(displayDependencyEdges(p, new Set(['left', 'right', 'external'])), [
-    { from: 'left', to: 'right' },
-    { from: 'left', to: 'external' },
+    { from: 'left', to: 'right', kind: 'explicit' },
+    { from: 'left', to: 'external', kind: 'explicit' },
   ]);
 });
 
@@ -54,4 +55,14 @@ test('dependency focus keeps one-hop neighbors and structural ancestors, and rol
   assert.deepEqual([...parent.coreUids], ['group', 'before', 'after']);
   assert.deepEqual([...parent.visibleUids], ['group', 'before', 'after']);
   assert.deepEqual([...parent.memberUids].sort(), ['group', 'inside-a', 'inside-b']);
+});
+
+test('dependency display and focus include generated assignee edges', () => {
+  const p = project([task('a'), task('b'), task('c', { assignee: '另一人' })]);
+  p.project.assignees = ['未指定', '另一人']; p.project.allow_assignee_parallel_tasks = false;
+  const edges = scheduleProjectPlan(p).dependencyEdges;
+  assert.deepEqual(displayDependencyEdges(p, new Set(['a', 'b', 'c']), edges), [
+    { from: 'a', to: 'b', kind: 'assignee' },
+  ]);
+  assert.deepEqual([...dependencyFocus(p, 'a', edges).coreUids], ['a', 'b']);
 });

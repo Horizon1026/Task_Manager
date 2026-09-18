@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProject } from '../src/model';
-import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, setTaskParent, toSlot } from '../src/schedule';
+import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, scheduleProjectPlan, setTaskParent, toSlot } from '../src/schedule';
 import { alignStart, timeColumns } from '../src/timeline';
 import { project, task } from './fixtures';
 
@@ -19,6 +19,65 @@ test('1.5 days finishes next morning, finish-start dependency starts next aftern
 test('dependency uses latest completion regardless of row order', () => {
   const s = scheduleProject(project([task('c', { dependencies: ['a', 'b'] }), task('a', { duration_days: 1 }), task('b', { duration_days: 2 })]));
   assert.equal(formatSlot(s.get('c')!.start), '2026-09-16 上午');
+});
+test('assignee tasks overlap when allowed and serialize by leaf order when disabled', () => {
+  const value = project([task('a', { duration_days: 1 }), task('b', { duration_days: 1 })]);
+  const parallel = scheduleProject(value);
+  assert.equal(parallel.get('a')!.start, parallel.get('b')!.start);
+  value.project.allow_assignee_parallel_tasks = false;
+  const serial = scheduleProject(value);
+  assert.equal(serial.get('b')!.dependencyFloor, serial.get('a')!.end);
+  assert.equal(serial.get('b')!.start, serial.get('a')!.end);
+  assert.deepEqual(value.tasks.map(item => item.dependencies), [[], []]);
+});
+test('assignee serialization ignores parents and does not constrain different assignees', () => {
+  const value = project([
+    task('parent', { assignee: '甲' }), task('child', { parent_uid: 'parent', assignee: '甲' }),
+    task('other', { assignee: '乙' }), task('next', { assignee: '甲' }),
+  ]);
+  value.project.assignees = ['甲', '乙']; value.project.allow_assignee_parallel_tasks = false;
+  const schedule = scheduleProject(value);
+  assert.equal(schedule.get('other')!.start, schedule.get('child')!.start);
+  assert.equal(schedule.get('next')!.start, schedule.get('child')!.end);
+});
+test('explicit dependencies override display order without creating a resource cycle', () => {
+  const value = project([task('a', { dependencies: ['b'] }), task('b')]);
+  value.project.allow_assignee_parallel_tasks = false;
+  const plan = scheduleProjectPlan(value);
+  assert.equal(plan.schedule.get('a')!.start, plan.schedule.get('b')!.end);
+  assert.deepEqual(plan.dependencyEdges, [{ from: 'b', to: 'a', kind: 'explicit' }]);
+});
+test('resource list scheduling resolves backward dependencies deterministically and keeps one assignee non-overlapping', () => {
+  const value = project([
+    task('a', { dependencies: ['f'] }), task('b'), task('c'),
+    task('d', { dependencies: ['c'] }), task('e'), task('f', { dependencies: ['e'] }),
+  ]);
+  value.project.allow_assignee_parallel_tasks = false;
+  const before = structuredClone(value.tasks), first = scheduleProjectPlan(value), second = scheduleProjectPlan(value);
+  const scheduledOrder = [...first.schedule].filter(([uid]) => value.tasks.some(item => item.uid === uid)).sort((left, right) => left[1].start - right[1].start).map(([uid]) => uid);
+  assert.deepEqual(scheduledOrder, ['b', 'c', 'd', 'e', 'f', 'a']);
+  assert.deepEqual(first.dependencyEdges, [
+    { from: 'f', to: 'a', kind: 'explicit' },
+    { from: 'c', to: 'd', kind: 'explicit' },
+    { from: 'e', to: 'f', kind: 'explicit' },
+    { from: 'b', to: 'c', kind: 'assignee' },
+    { from: 'd', to: 'e', kind: 'assignee' },
+  ]);
+  for (let index = 1; index < scheduledOrder.length; index++) assert.equal(first.schedule.get(scheduledOrder[index])!.start, first.schedule.get(scheduledOrder[index - 1])!.end);
+  assert.deepEqual([...second.schedule], [...first.schedule]);
+  assert.deepEqual(second.dependencyEdges, first.dependencyEdges);
+  assert.deepEqual(value.tasks, before);
+});
+test('resource list scheduling avoids idle time before a higher-priority future task', () => {
+  const value = project([
+    task('future', { earliest_start: { date: '2026-09-21', period: 'am' } }),
+    task('ready'),
+  ]);
+  value.project.allow_assignee_parallel_tasks = false;
+  const plan = scheduleProjectPlan(value);
+  assert.equal(formatSlot(plan.schedule.get('ready')!.start), '2026-09-14 上午');
+  assert.equal(formatSlot(plan.schedule.get('future')!.start), '2026-09-21 上午');
+  assert.deepEqual(plan.dependencyEdges, [{ from: 'ready', to: 'future', kind: 'assignee' }]);
 });
 test('weekend skip does not count rest time in duration', () => {
   const t = task('a', { earliest_start: { date: '2026-09-18', period: 'pm' }, duration_days: 1 });

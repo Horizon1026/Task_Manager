@@ -6,6 +6,7 @@ project:
   default_filter:
     labels: []
     mode: or
+  allow_assignee_parallel_tasks: true
   assignees:
     - 未指定
   status_colors:

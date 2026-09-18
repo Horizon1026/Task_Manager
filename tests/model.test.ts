@@ -28,3 +28,11 @@ test('collapse_children defaults to false for legacy tasks', () => {
   delete legacy.tasks[0].collapse_children;
   assert.equal(validateProject(legacy).tasks[0].collapse_children, false);
 });
+
+test('legacy projects allow assignee parallelism by default and duplicate assignees are rejected', () => {
+  const legacy = JSON.parse(JSON.stringify(project()));
+  delete legacy.project.allow_assignee_parallel_tasks;
+  assert.equal(validateProject(legacy).project.allow_assignee_parallel_tasks, true);
+  legacy.project.assignees = ['未指定', '未指定'];
+  assert.throws(() => validateProject(legacy), /不能包含重复名称/);
+});

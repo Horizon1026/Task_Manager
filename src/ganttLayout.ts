@@ -1,8 +1,9 @@
 import type { Project, Task } from './model';
+import { explicitDependencyEdges, type EffectiveDependencyEdge, type DependencyKind } from './effectiveDependencies';
 
 export type GanttTreeItem = { task: Task; depth: number; top: number; height: number; isParent: boolean };
 export type GanttTreeLayout = { items: GanttTreeItem[]; height: number };
-export type DisplayDependencyEdge = { from: string; to: string };
+export type DisplayDependencyEdge = { from: string; to: string; kind: DependencyKind };
 export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>; memberUids: Set<string> };
 
 const LEAF_HEIGHT = 42;
@@ -38,7 +39,7 @@ export function ganttTreeLayout(project: Project): GanttTreeLayout {
 }
 
 /** Projects real leaf dependencies onto the currently visible collapsed ancestors. */
-export function displayDependencyEdges(project: Project, visibleUids: Set<string>): DisplayDependencyEdge[] {
+export function displayDependencyEdges(project: Project, visibleUids: Set<string>, edges: EffectiveDependencyEdge[] = explicitDependencyEdges(project)): DisplayDependencyEdge[] {
   const byUid = new Map(project.tasks.map(task => [task.uid, task]));
   function visibleEndpoint(uid: string): string | null {
     if (visibleUids.has(uid)) return uid;
@@ -51,18 +52,20 @@ export function displayDependencyEdges(project: Project, visibleUids: Set<string
     }
     return null;
   }
-  const result: DisplayDependencyEdge[] = [], seen = new Set<string>();
-  for (const task of project.tasks) for (const dependency of task.dependencies) {
-    const from = visibleEndpoint(dependency), to = visibleEndpoint(task.uid);
+  const result: DisplayDependencyEdge[] = [], indexByPair = new Map<string, number>();
+  for (const edge of edges) {
+    const from = visibleEndpoint(edge.from), to = visibleEndpoint(edge.to);
     if (!from || !to || from === to) continue;
     const key = `${from}\0${to}`;
-    if (!seen.has(key)) { seen.add(key); result.push({ from, to }); }
+    const existing = indexByPair.get(key);
+    if (existing === undefined) { indexByPair.set(key, result.length); result.push({ from, to, kind: edge.kind }); }
+    else if (edge.kind === 'explicit') result[existing] = { from, to, kind: 'explicit' };
   }
   return result;
 }
 
 /** Finds one-hop external dependencies and the ancestor paths needed to render them as a tree. */
-export function dependencyFocus(project: Project, uid: string): DependencyFocus {
+export function dependencyFocus(project: Project, uid: string, edges: EffectiveDependencyEdge[] = explicitDependencyEdges(project)): DependencyFocus {
   const byUid = new Map(project.tasks.map(task => [task.uid, task]));
   const children = new Map<string, string[]>();
   for (const task of project.tasks) if (task.parent_uid !== null) {
@@ -76,9 +79,9 @@ export function dependencyFocus(project: Project, uid: string): DependencyFocus 
     memberUids.add(child); pending.push(...(children.get(child) ?? []));
   }
   const coreUids = new Set([uid]);
-  for (const task of project.tasks) for (const dependency of task.dependencies) {
-    const fromInside = memberUids.has(dependency), toInside = memberUids.has(task.uid);
-    if (fromInside !== toInside) coreUids.add(fromInside ? task.uid : dependency);
+  for (const edge of edges) {
+    const fromInside = memberUids.has(edge.from), toInside = memberUids.has(edge.to);
+    if (fromInside !== toInside) coreUids.add(fromInside ? edge.to : edge.from);
   }
   const visibleUids = new Set(coreUids);
   for (const coreUid of coreUids) {

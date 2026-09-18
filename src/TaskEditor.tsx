@@ -3,12 +3,14 @@ import { descendantUids, statuses, type HalfDay, type Project, type Task } from 
 import { formatSlot, type Scheduled } from './schedule';
 import { SearchableSelect } from './SearchableSelect';
 import type { RelationDragController } from './useRelationDrag';
+import type { EffectiveDependencyEdge } from './effectiveDependencies';
 
 function MomentInput({ title, value, onChange }: { title: string; value: HalfDay | null; onChange: (v: HalfDay | null) => void }) {
   return <label>{title}<div className="inline"><input aria-label={title} type="date" min="1900-01-01" max="2199-12-31" value={value?.date || ''} onChange={e => onChange(e.target.value ? { date: e.target.value, period: value?.period || 'am' } : null)} /><SearchableSelect label={`${title}时段`} value={value?.period || 'am'} disabled={!value} onChange={period => value && onChange({ ...value, period: period as 'am' | 'pm' })} options={[{ value: 'am', label: '上午' }, { value: 'pm', label: '下午' }]} /></div></label>;
 }
-export function TaskEditor({ task, project, scheduled, relation, onChange, onParentChange, onOrder, onDependency, onAdd, onDelete, onClose }: {
+export function TaskEditor({ task, project, scheduled, dependencyEdges, relation, onChange, onParentChange, onOrder, onDependency, onAdd, onDelete, onClose }: {
   task: Task; project: Project; scheduled?: Scheduled;
+  dependencyEdges: EffectiveDependencyEdge[];
   relation: RelationDragController;
   onChange: (task: Task) => void; onParentChange: (parentUid: string | null) => void; onOrder: (order: number) => void;
   onDependency: (from: string, to: string) => void; onAdd: () => void; onDelete: () => void; onClose: () => void;
@@ -19,6 +21,7 @@ export function TaskEditor({ task, project, scheduled, relation, onChange, onPar
   const forbiddenParents = descendantUids(project, task.uid);
   const parentChoices = project.tasks.filter(value => value.uid !== task.uid && !forbiddenParents.has(value.uid));
   const isParent = childUids.size > 0;
+  const automaticDependencies = dependencyEdges.filter(edge => edge.to === task.uid && edge.kind === 'assignee');
   const set = <K extends keyof Task>(key: K, value: Task[K]) => onChange({ ...task, [key]: value });
   return <aside className="editor" aria-label="任务详情编辑">
     <div className="panel-heading"><div><span className="eyebrow">TASK DETAILS</span><h2>任务详情</h2></div><div className="panel-heading-actions"><button className="panel-add-task" aria-label="新建任务" onClick={onAdd}>＋ 新建任务</button><button className="icon-button" aria-label="关闭任务详情" onClick={onClose}>×</button></div></div>
@@ -47,6 +50,7 @@ export function TaskEditor({ task, project, scheduled, relation, onChange, onPar
     <label>自定义标签<input value={labels} placeholder="用逗号分隔，例如：开发, 核心" onChange={e => { setLabels(e.target.value); set('labels', [...new Set(e.target.value.split(/[,，]/).map(s => s.trim()).filter(Boolean))]); }} /></label>
     {!isParent && <><div className="field-label">前置依赖任务</div>
     <div className="dependency-list">{task.dependencies.length === 0 && <span className="muted small">无前置依赖</span>}{task.dependencies.map(uid => <div key={uid}><span>{project.tasks.find(t => t.uid === uid)?.name || uid}<small className="mono">{uid}</small></span><button aria-label={`移除依赖 ${uid}`} onClick={() => set('dependencies', task.dependencies.filter(d => d !== uid))}>×</button></div>)}</div>
+    {automaticDependencies.length > 0 && <p className="field-note">同执行人自动串行：{automaticDependencies.map(edge => project.tasks.find(value => value.uid === edge.from)?.name || edge.from).join('、')}（不写入 dependencies）</p>}
     <div className="inline"><SearchableSelect label="选择前置任务" value={dependency} onChange={setDependency} options={[{ value: '', label: '选择前置任务…' }, ...project.tasks.filter(t => t.uid !== task.uid && !task.dependencies.includes(t.uid) && !project.tasks.some(value => value.parent_uid === t.uid)).map(t => ({ value: t.uid, label: `${t.order}. ${t.name}` }))]} /><button disabled={!dependency} onClick={() => { onDependency(dependency, task.uid); setDependency(''); }}>添加</button></div></>}
     {scheduled && <div className={`computed ${scheduled.late ? 'danger-box' : ''}`}><span>计算后的排期</span><strong>{formatSlot(scheduled.start)}</strong><span>至 {formatSlot(scheduled.end - 1)}</span>{scheduled.late && <b>超过最迟完成时间</b>}{scheduled.unknownYears.length > 0 && <span>暂估：缺少 {scheduled.unknownYears.join('、')} 年日历</span>}</div>}
     <button className="danger-text full-width" disabled={isParent} title={isParent ? '请先处理子任务' : undefined} onClick={onDelete}>删除任务</button>

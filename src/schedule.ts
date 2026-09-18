@@ -1,4 +1,5 @@
 import { validateProject, type Project, type Task, type HalfDay } from './model';
+import { buildEffectiveDependencyGraph, type EffectiveDependencyEdge } from './effectiveDependencies';
 
 const DAY = 86_400_000;
 export const dayNumber = (date: string) => Math.floor(Date.parse(`${date}T00:00:00Z`) / DAY);
@@ -43,7 +44,10 @@ export function durationBetween(start: number, end: number, task: Task, calendar
   for (let slot = start; slot < end; slot++) if (task.allow_rest_day_work || calendar(dateString(Math.floor(slot / 2))).isWorkday) count++;
   return count / 2;
 }
-export function scheduleProject(input: Project): Map<string, Scheduled> {
+export type SchedulePlan = { schedule: Map<string, Scheduled>; dependencyEdges: EffectiveDependencyEdge[] };
+
+/** Deterministic resource-constrained list scheduling for leaf tasks, followed by parent roll-up. */
+export function scheduleProjectPlan(input: Project): SchedulePlan {
   const p = validateProject(input), calendar = makeCalendar(p);
   const tasks = new Map(p.tasks.map(t => [t.uid, t]));
   const children = new Map<string, string[]>();
@@ -51,25 +55,29 @@ export function scheduleProject(input: Project): Map<string, Scheduled> {
     const value = children.get(task.parent_uid) ?? [];
     value.push(task.uid); children.set(task.parent_uid, value);
   }
+  const leaves = p.tasks.filter(task => !children.has(task.uid));
+  const leafUids = new Set(leaves.map(task => task.uid));
+  const successors = new Map(leaves.map(task => [task.uid, [] as string[]]));
+  const indegree = new Map(leaves.map(task => [task.uid, 0]));
+  for (const task of leaves) for (const dependency of task.dependencies) if (leafUids.has(dependency)) {
+    successors.get(dependency)!.push(task.uid);
+    indegree.set(task.uid, indegree.get(task.uid)! + 1);
+  }
   const result = new Map<string, Scheduled>();
-  function schedule(uid: string): Scheduled {
-    const previous = result.get(uid); if (previous) return previous;
-    const task = tasks.get(uid)!;
-    const childIds = children.get(uid);
-    if (childIds?.length) {
-      const childSchedules = childIds.map(schedule);
-      const end = Math.max(...childSchedules.map(value => value.end));
-      const value: Scheduled = {
-        start: Math.min(...childSchedules.map(value => value.start)), end, dependencyFloor: -Infinity,
-        late: task.latest_finish !== null && end > toSlot(task.latest_finish) + 1,
-        unknownYears: [...new Set(childSchedules.flatMap(value => value.unknownYears))].sort(),
-      };
-      result.set(uid, value); return value;
-    }
-    const dependencyFloor = task.dependencies.reduce((latest, dep) => Math.max(latest, schedule(dep).end), -Infinity);
+  const assigneeEnd = new Map<string, number>(), assigneePrevious = new Map<string, string>();
+  const resourceEdges: EffectiveDependencyEdge[] = [];
+  const explicitPairs = new Set(p.tasks.flatMap(task => task.dependencies.map(dependency => `${dependency}\0${task.uid}`)));
+
+  function candidate(task: Task) {
+    const explicitFloor = task.dependencies.reduce((latest, dependency) => Math.max(latest, result.get(dependency)!.end), -Infinity);
+    const resourceFloor = p.project.allow_assignee_parallel_tasks ? -Infinity : (assigneeEnd.get(task.assignee) ?? -Infinity);
+    const dependencyFloor = Math.max(explicitFloor, resourceFloor);
     const earliest = toSlot(task.earliest_start ?? { date: p.project.start_date, period: 'am' });
     const constraint = Math.max(earliest, dependencyFloor);
     const start = nextWorkSlot(constraint, task, calendar);
+    return { task, dependencyFloor, constraint, start };
+  }
+  function finish({ task, dependencyFloor, constraint, start }: ReturnType<typeof candidate>): Scheduled {
     const unknownYears = new Set<number>();
     const observe = (slot: number) => {
       const date = dateString(Math.floor(slot / 2));
@@ -87,10 +95,47 @@ export function scheduleProject(input: Project): Map<string, Scheduled> {
       late: task.latest_finish !== null && cursor > toSlot(task.latest_finish) + 1,
       unknownYears: [...unknownYears].sort(),
     };
+    return value;
+  }
+
+  const ready = leaves.filter(task => indegree.get(task.uid) === 0);
+  while (ready.length) {
+    const candidates = ready.map(candidate).sort((left, right) => left.start - right.start || left.task.order - right.task.order || (left.task.uid < right.task.uid ? -1 : left.task.uid > right.task.uid ? 1 : 0));
+    const selected = candidates[0];
+    ready.splice(ready.findIndex(task => task.uid === selected.task.uid), 1);
+    const value = finish(selected);
+    result.set(selected.task.uid, value);
+    if (!p.project.allow_assignee_parallel_tasks) {
+      const previous = assigneePrevious.get(selected.task.assignee);
+      if (previous && !explicitPairs.has(`${previous}\0${selected.task.uid}`)) resourceEdges.push({ from: previous, to: selected.task.uid, kind: 'assignee' });
+      assigneeEnd.set(selected.task.assignee, value.end);
+      assigneePrevious.set(selected.task.assignee, selected.task.uid);
+    }
+    for (const successor of successors.get(selected.task.uid) ?? []) {
+      const remaining = indegree.get(successor)! - 1;
+      indegree.set(successor, remaining);
+      if (remaining === 0) ready.push(tasks.get(successor)!);
+    }
+  }
+  if (result.size !== leaves.length) throw new Error('显式依赖形成循环，无法完成资源排程。');
+
+  function rollUp(uid: string): Scheduled {
+    const existing = result.get(uid); if (existing) return existing;
+    const task = tasks.get(uid)!, childSchedules = children.get(uid)!.map(rollUp);
+    const end = Math.max(...childSchedules.map(value => value.end));
+    const value: Scheduled = {
+      start: Math.min(...childSchedules.map(value => value.start)), end, dependencyFloor: -Infinity,
+      late: task.latest_finish !== null && end > toSlot(task.latest_finish) + 1,
+      unknownYears: [...new Set(childSchedules.flatMap(value => value.unknownYears))].sort(),
+    };
     result.set(uid, value); return value;
   }
-  for (const task of p.tasks) schedule(task.uid);
-  return result;
+  for (const task of p.tasks) if (children.has(task.uid)) rollUp(task.uid);
+  return { schedule: result, dependencyEdges: buildEffectiveDependencyGraph(p, resourceEdges).edges };
+}
+
+export function scheduleProject(input: Project): Map<string, Scheduled> {
+  return scheduleProjectPlan(input).schedule;
 }
 
 /** Reparent atomically; the first child takes over every dependency edge of a leaf parent. */

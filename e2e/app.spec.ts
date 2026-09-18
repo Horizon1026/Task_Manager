@@ -19,6 +19,18 @@ test('selects a YAML project file from the workspace picker', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
 });
 async function taskDetails(page: Page, name: string) { await page.getByRole('button', { name, exact: false }).filter({ has: page.locator('strong') }).first().click(); }
+test('groups navigation and project actions into two horizontal header rows', async ({ page }) => {
+  const navigation = page.getByRole('navigation', { name: '工作区导航' });
+  await expect(navigation).toContainText('任务排期');
+  for (const name of ['项目设置', '本地日历', '备份历史']) await expect(navigation.getByRole('button', { name })).toBeVisible();
+  const navigationCenters = await navigation.locator(':scope > *').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return box.top + box.height / 2; }));
+  expect(Math.max(...navigationCenters) - Math.min(...navigationCenters)).toBeLessThan(2);
+
+  const actions = page.getByRole('group', { name: '项目操作' });
+  for (const name of ['新增任务', '导出交互式 HTML', '保存并备份']) await expect(actions.getByRole('button', { name, exact: false })).toBeVisible();
+  const actionCenters = await actions.getByRole('button').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return box.top + box.height / 2; }));
+  expect(Math.max(...actionCenters) - Math.min(...actionCenters)).toBeLessThan(2);
+});
 test('loads seven scales, colors, muted filtering and read-only UID', async ({ page }) => {
   await expect(page.locator('.task-bar')).toHaveCount(6);
   await expect(page.getByTestId('bar-task-engine')).toHaveCSS('border-color', 'rgb(211, 112, 97)');
@@ -292,4 +304,36 @@ test('invalid external YAML retains last valid view and recovers after repair', 
 });
 test('local server rejects cross-origin writes', async ({ request }) => {
   const response = await request.post('/api/save', { headers: { origin: 'https://unrelated.example' }, data: {} }); expect(response.status()).toBe(403);
+});
+
+test('project settings configure start date, assignees and assignee serialization', async ({ page, request }) => {
+  await page.getByRole('button', { name: '项目设置' }).click();
+  await page.getByLabel('项目开始日期').fill('2026-09-15');
+  const parallelTasks = page.getByLabel('允许同一个执行人同时有并行任务');
+  await expect(parallelTasks).toBeChecked();
+  await parallelTasks.uncheck();
+  await expect(parallelTasks).not.toBeChecked();
+  await page.getByLabel('新增执行人').fill('新成员');
+  await page.getByRole('button', { name: '添加执行人' }).click();
+  await expect(page.getByRole('button', { name: '删除执行人 新成员' })).toBeVisible();
+  await page.getByRole('button', { name: '删除执行人 新成员' }).click();
+  await expect(page.getByRole('button', { name: '删除执行人 新成员' })).toHaveCount(0);
+  await page.getByLabel('新增执行人').fill('新成员');
+  await page.getByRole('button', { name: '添加执行人' }).click();
+  await page.getByRole('button', { name: '删除执行人 小林' }).click();
+  await expect(page.getByRole('status')).toContainText('仍由其负责');
+  await page.getByRole('button', { name: '完成编辑' }).click();
+
+  await page.getByTestId('bar-task-release').click();
+  await expect(page.locator('.dependency-arrow.assignee-dependency')).toHaveCount(1);
+  await expect(page.getByLabel('任务详情编辑')).toContainText('同执行人自动串行');
+  await expect(page.getByRole('button', { name: '移除依赖 task-engine' })).toHaveCount(0);
+  await page.getByRole('button', { name: '关闭任务详情' }).click();
+  await page.getByRole('button', { name: '保存并备份', exact: false }).click();
+  await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
+  const { project: saved } = await (await request.get('/api/project')).json();
+  expect(saved.project.start_date).toBe('2026-09-15');
+  expect(saved.project.allow_assignee_parallel_tasks).toBe(false);
+  expect(saved.project.assignees).toContain('新成员');
+  expect(saved.tasks.find((task: { uid: string }) => task.uid === 'task-release').dependencies).toEqual(['task-qa']);
 });

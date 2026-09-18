@@ -52,6 +52,7 @@ export const projectSchema = z.object({
     name: z.string().trim().min(1).max(200), start_date: date,
     default_scale: z.enum(scales),
     default_filter: z.object({ labels: z.array(z.string()), mode: z.enum(['and', 'or']) }).strict(),
+    allow_assignee_parallel_tasks: z.boolean().default(true),
     assignees: z.array(z.string().trim().min(1).max(200)).max(1000).default([]),
     status_colors: statusColors,
   }).strict(),
@@ -88,6 +89,7 @@ export function validateProject(input: unknown): Project {
   if (!parsed.success) throw new Error(parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n'));
   const p = parsed.data;
   if (!p.project.assignees.length) p.project.assignees = [...new Set(p.tasks.map(task => task.assignee || '未指定'))].sort();
+  if (new Set(p.project.assignees).size !== p.project.assignees.length) throw new Error('项目执行人名单不能包含重复名称');
   for (const task of p.tasks) {
     if (!task.assignee) task.assignee = '未指定';
     if (!p.project.assignees.includes(task.assignee)) throw new Error(`任务「${task.name}」的执行人不在项目名单中：${task.assignee}`);
