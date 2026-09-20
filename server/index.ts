@@ -8,7 +8,7 @@ import { parseTaskDefaults } from './taskDefaults';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4310);
-const initialFile = resolve(process.env.TASK_MANAGER_FILE || resolve(root, 'data/project.yaml'));
+const initialFile = resolve(process.env.TASK_MANAGER_FILE || resolve(root, 'data/example_project.yaml'));
 const taskDefaultsFile = resolve(process.env.TASK_MANAGER_DEFAULTS_FILE || resolve(root, 'task_defaults.yaml'));
 const projectDir = dirname(initialFile);
 let store = new ProjectStore(initialFile);

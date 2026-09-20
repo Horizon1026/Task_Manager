@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { type Project, type Scale, type Task } from './model';
 import { dayNumber, dateString, durationBetween, fromSlot, makeCalendar, nextWorkSlot, type Scheduled, todayLocal } from './schedule';
 import { alignStart, pixelsPerDay, timeColumns } from './timeline';
 import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from './ganttLayout';
 import { GANTT_BAR_TOP, GANTT_PARENT_INSET, GANTT_PARENT_MIN_HEIGHT, GANTT_SIZING } from './ganttSizing';
+import { GANTT_ZOOM_LEVELS, normalizeGanttZoom } from './ganttZoom';
 import type { RelationDragController } from './useRelationDrag';
 import { GanttDependencyLayer } from './GanttDependencyLayer';
 import { GanttHoverCard } from './GanttHoverCard';
@@ -14,8 +15,6 @@ import './ganttOverrides.css';
 
 type Drag = { uid: string; mode: 'move' | 'start' | 'end'; x: number; y: number; dx: number; dy: number; moved: boolean };
 type Props = { project: Project; schedule: Map<string, Scheduled>; dependencyEdges: EffectiveDependencyEdge[]; scale: Scale; selected: string | null; filter: { labels: string[]; mode: 'and' | 'or' }; focusUid: string | null; canFocus: boolean; onFocusChange: (uid: string | null) => void; onSelect: (uid: string | null) => void; onChange: (task: Task) => void; onOrder: (uid: string, order: number) => void; onSiblingOrder: (uid: string, targetUid: string) => void; onToggleCollapse: (uid: string) => void; relation: RelationDragController; notify: (message: string) => void };
-const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4] as const;
-
 export function Gantt({ project, schedule, dependencyEdges, scale, selected, filter, focusUid, canFocus, onFocusChange, onSelect, onChange, onOrder, onSiblingOrder, onToggleCollapse, relation, notify }: Props) {
   const allTasks = [...project.tasks].sort((a, b) => a.order - b.order);
   const matches = (task: Task) => !filter.labels.length || (filter.mode === 'and' ? filter.labels.every(label => task.labels.includes(label)) : filter.labels.some(label => task.labels.includes(label)));
@@ -32,8 +31,7 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   const focus = useMemo(() => focusUid ? dependencyFocus(project, focusUid, dependencyEdges) : null, [project, focusUid, dependencyEdges]);
   const visibleUids = focus?.visibleUids ?? filteredUids;
   const tasks = allTasks.filter(task => visibleUids.has(task.uid));
-  const visibleProject = useMemo(() => ({ ...project, tasks }), [project, tasks]);
-  const layout = useMemo(() => ganttTreeLayout(visibleProject), [visibleProject]);
+  const layout = useMemo(() => ganttTreeLayout(project, visibleUids), [project, visibleUids]);
   const byUid = useMemo(() => new Map(layout.items.map(item => [item.task.uid, item])), [layout]);
   const displayedUids = useMemo(() => new Set(layout.items.map(item => item.task.uid)), [layout]);
   const dependencyProject = useMemo(() => focusUid && focus && focus.memberUids.size > 1
@@ -100,14 +98,16 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   const x = (slot: number) => (slot - origin * 2) * pps;
   const isParent = (task: Task) => project.tasks.some(value => value.parent_uid === task.uid);
   function changeZoom(next: number) {
+    const target = normalizeGanttZoom(next);
+    if (target === zoom) return;
     const node = scroll.current;
     if (node) {
       const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
       zoomAnchorRef.current = origin * 2 + (node.scrollLeft + visibleTimelineWidth / 2) / pps;
     }
-    setZoom(next);
+    setZoom(target);
   }
-  const zoomIndex = ZOOM_LEVELS.indexOf(zoom as typeof ZOOM_LEVELS[number]);
+  const zoomIndex = Math.max(0, GANTT_ZOOM_LEVELS.indexOf(zoom as typeof GANTT_ZOOM_LEVELS[number]));
   function begin(e: ReactPointerEvent<HTMLElement>, task: Task, mode: Drag['mode']) {
     if (focusUid) return;
     if (e.button !== 0 && e.button !== 2) return;
@@ -173,8 +173,8 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
   const hoverTask = hover ? tasks.find(task => task.uid === hover.uid) : undefined;
-  return <div className={`gantt-section ${focusUid ? 'dependency-focus-mode' : ''}`}>
-    <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>{focusUid ? `正在查看「${project.tasks.find(task => task.uid === focusUid)?.name}」的直接依赖 · 只读 · 松开 M 恢复` : '右键拖动设置依赖 · R + 右键拖动设置父任务 · 悬浮按住 M 聚焦'}</span><div className="gantt-caption-actions"><div className="gantt-zoom" role="group" aria-label="甘特图水平缩放"><button type="button" aria-label="缩小甘特图" title="缩小时间轴" disabled={zoomIndex <= 0} onClick={() => changeZoom(ZOOM_LEVELS[zoomIndex - 1])}>−</button><button type="button" className="zoom-value" aria-label="重置甘特图缩放" title="恢复 100%" disabled={zoom === 1} onClick={() => changeZoom(1)}>{Math.round(zoom * 100)}%</button><button type="button" aria-label="放大甘特图" title="放大时间轴，让半天任务更宽" disabled={zoomIndex >= ZOOM_LEVELS.length - 1} onClick={() => changeZoom(ZOOM_LEVELS[zoomIndex + 1])}>＋</button></div><button disabled={!!focusUid} onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div></div>
+  return <div className={`gantt-section ${focusUid ? 'dependency-focus-mode' : ''}`} style={{ '--gantt-parent-label-top': `${GANTT_SIZING.parentLabelTop}px` } as CSSProperties}>
+    <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>{focusUid ? `正在查看「${project.tasks.find(task => task.uid === focusUid)?.name}」的直接依赖 · 只读 · 松开 M 恢复` : '右键拖动设置依赖 · R + 右键拖动设置父任务 · 悬浮按住 M 聚焦'}</span><div className="gantt-caption-actions"><div className="gantt-zoom" role="group" aria-label="甘特图水平缩放"><button type="button" aria-label="缩小甘特图" title="缩小时间轴" disabled={zoomIndex <= 0} onClick={() => changeZoom(GANTT_ZOOM_LEVELS[zoomIndex - 1])}>−</button><button type="button" className="zoom-value" aria-label="重置甘特图缩放" title="恢复 100%" disabled={zoom === 1} onClick={() => changeZoom(1)}>{Math.round(zoom * 100)}%</button><button type="button" aria-label="放大甘特图" title="放大时间轴，让半天任务更宽" disabled={zoomIndex >= GANTT_ZOOM_LEVELS.length - 1} onClick={() => changeZoom(GANTT_ZOOM_LEVELS[zoomIndex + 1])}>＋</button></div><button disabled={!!focusUid} onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div></div>
     <div className="gantt-scroll" ref={scroll} onPointerDown={beginPan} onPointerMove={pan} onPointerUp={finishPan} onPointerCancel={finishPan} onScroll={e => setScrollLeft(e.currentTarget.scrollLeft)} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
       <div className="gantt-header"><div className="task-heading" style={{ width: taskListWidth, minWidth: taskListWidth }}>任务 / 执行人<span>{tasks.length} 条</span><span role="separator" aria-label="调整任务列表宽度" aria-orientation="vertical" className="task-list-resize-handle" onPointerDown={beginListResize} onPointerMove={resizeList} onPointerUp={finishListResize} onPointerCancel={finishListResize} /></div><div className="time-heading" style={{ width }}>{columns.map(column => <div key={column.start} style={{ left: (column.start - origin) * ppd, width: (column.end - column.start) * ppd }}>{column.label}{scale === 'day' && <small>上午　下午</small>}</div>)}</div></div>
       <div className="gantt-body tree-gantt-body" style={{ minHeight: height }}>

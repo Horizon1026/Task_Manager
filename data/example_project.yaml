@@ -195,7 +195,7 @@ tasks:
     name: 市场调研
     description: ""
     assignee: 产品经理
-    status: 未开始
+    status: 已完成
     earliest_start: null
     latest_finish: null
     duration_days: 2
@@ -210,7 +210,7 @@ tasks:
     name: 产品PRD输出
     description: ""
     assignee: 产品经理
-    status: 未开始
+    status: 已完成
     earliest_start: null
     latest_finish: null
     duration_days: 3
@@ -308,7 +308,7 @@ tasks:
     name: 硬件方案设计
     description: 含传感器、功能设备、动力设备选型
     assignee: 硬件工程师
-    status: 未开始
+    status: 已完成
     earliest_start: null
     latest_finish: null
     duration_days: 3
@@ -324,7 +324,7 @@ tasks:
     name: 硬件开发
     description: 原理图设计、评审、PCB布局
     assignee: 硬件工程师
-    status: 未开始
+    status: 进行中
     earliest_start: null
     latest_finish: null
     duration_days: 5
@@ -389,7 +389,7 @@ tasks:
     name: 结构ID外观设计与评审
     description: 需要产品深度参与
     assignee: 结构工程师
-    status: 未开始
+    status: 验收中
     earliest_start: null
     latest_finish: null
     duration_days: 4
@@ -471,7 +471,7 @@ tasks:
     name: 软件方案设计
     description: 含定位、感知、规划、控制、系统、地面站等模块
     assignee: 软件工程师
-    status: 未开始
+    status: 已完成
     earliest_start: null
     latest_finish: null
     duration_days: 4
@@ -487,7 +487,7 @@ tasks:
     name: 软件方案评审
     description: 各模块接口、交互逻辑磨合确认
     assignee: 软件工程师
-    status: 未开始
+    status: 进行中
     earliest_start:
       date: 2026-03-25
       period: am
@@ -872,7 +872,7 @@ tasks:
     name: 质量控制计划
     description: 制定检验标准、抽样方案、放行准则
     assignee: 质量工程师
-    status: 未开始
+    status: 已完成
     earliest_start: null
     latest_finish: null
     duration_days: 3
@@ -888,7 +888,7 @@ tasks:
     name: PFMEA与防错设计
     description: 识别装配风险，设计扭矩联锁、视觉检查等防错
     assignee: 质量工程师
-    status: 未开始
+    status: 进行中
     earliest_start: null
     latest_finish: null
     duration_days: 3
@@ -904,7 +904,7 @@ tasks:
     name: 来料检验(IQC)
     description: 关键物料抽检，建立物料追溯
     assignee: 质量工程师
-    status: 未开始
+    status: 验收中
     earliest_start: null
     latest_finish: null
     duration_days: 2

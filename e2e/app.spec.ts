@@ -5,7 +5,7 @@ import { selectChoice } from './select';
 import { GANTT_ROW_STRIDE, GANTT_SIZING } from '../src/ganttSizing';
 
 test.beforeEach(async ({ page, request }) => {
-  await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
+  await request.post('/api/projects/select', { data: { name: 'example_project.yaml' } });
   const data = await (await request.get('/api/project')).json();
   await writeFile(data.file, await readFile('tests/e2e-project.yaml', 'utf8'));
   await page.goto('/'); await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
@@ -16,7 +16,7 @@ test('selects a YAML project file from the workspace picker', async ({ page }) =
   await expect(page.getByRole('option')).toHaveCount(2);
   await selectChoice(page, '选择项目文件', 'project_c5.yaml');
   await expect(page.getByRole('heading', { name: 'C5 项目' })).toBeVisible();
-  await selectChoice(page, '选择项目文件', 'project.yaml');
+  await selectChoice(page, '选择项目文件', 'example_project.yaml');
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
 });
 async function taskDetails(page: Page, name: string) { await page.getByRole('button', { name, exact: false }).filter({ has: page.locator('strong') }).first().click(); }

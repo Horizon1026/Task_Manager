@@ -5,7 +5,7 @@ import { project, task } from '../tests/fixtures';
 import { selectChoice } from './select';
 
 test.beforeEach(async ({ page, request }) => {
-  await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
+  await request.post('/api/projects/select', { data: { name: 'example_project.yaml' } });
   const { file } = await (await request.get('/api/project')).json();
   await writeFile(file, stringify(project([
     task('a', { dependencies: ['b'], duration_days: 2 }), task('b', { duration_days: 2 }),

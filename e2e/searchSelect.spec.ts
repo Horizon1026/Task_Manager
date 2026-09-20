@@ -4,7 +4,7 @@ import { stringify } from 'yaml';
 import { selectChoice } from './select';
 
 test.beforeEach(async ({ page, request }) => {
-  await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
+  await request.post('/api/projects/select', { data: { name: 'example_project.yaml' } });
   const { file } = await (await request.get('/api/project')).json();
   await writeFile(file, await readFile('tests/e2e-project.yaml', 'utf8'));
   await page.goto('/');
@@ -81,14 +81,14 @@ test('project search does not switch until confirmation and cancelled dirty swit
   await picker.fill('C5');
   await expect(page.getByRole('option')).toHaveCount(1);
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
-  expect((await (await request.get('/api/project')).json()).file).toMatch(/\/project.yaml$/);
+  expect((await (await request.get('/api/project')).json()).file).toMatch(/\/example_project.yaml$/);
   await page.keyboard.press('Escape');
   await page.getByTestId('bar-task-discovery').click();
   await page.getByLabel('任务名称', { exact: true }).fill('本地修改');
   await page.getByRole('button', { name: '关闭任务详情' }).click();
   page.once('dialog', dialog => dialog.dismiss());
   await selectChoice(page, '选择项目文件', 'project_c5.yaml');
-  await expect(picker).toHaveValue('project.yaml');
+  await expect(picker).toHaveValue('example_project.yaml');
   await expect(page.getByTestId('save-state')).toContainText('未保存');
 });
 

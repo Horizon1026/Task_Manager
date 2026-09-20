@@ -5,7 +5,7 @@ import { stringify } from 'yaml';
 import { GANTT_SIZING } from '../src/ganttSizing';
 
 test.beforeEach(async ({ page, request }) => {
-  await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
+  await request.post('/api/projects/select', { data: { name: 'example_project.yaml' } });
   const { file } = await (await request.get('/api/project')).json();
   await writeFile(file, await readFile('tests/e2e-project.yaml', 'utf8'));
   await page.goto('/');
@@ -25,6 +25,14 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
   await expect(page.locator('.bar')).toHaveCount(6);
   await expect(page.locator('.edge')).toHaveCount(6);
+  const scroll = page.locator('#scroll');
+  const zoomBar = page.locator('.bar[data-uid="task-design"]');
+  const zoomWidth = (await zoomBar.boundingBox())!.width;
+  await scroll.evaluate(element => { element.scrollLeft = 100; });
+  const beforeZoom = await scroll.evaluate(element => element.scrollLeft);
+  await page.getByRole('button', { name: '放大', exact: true }).click();
+  await expect.poll(async () => (await zoomBar.boundingBox())!.width).toBeCloseTo(zoomWidth * 1.25, 0);
+  await expect.poll(() => scroll.evaluate(element => element.scrollLeft)).toBeGreaterThan(beforeZoom);
   const arrowPosition = await page.locator('.edge').first().evaluate(group => {
     const path = group.querySelector('path') as SVGPathElement;
     const arrow = group.querySelector('.edge-arrowhead') as SVGLineElement;
@@ -42,8 +50,10 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   expect(arrowPosition.distance).toBeLessThan(0.5);
   expect(arrowPosition.curveMarker).toBeNull();
   expect(arrowPosition.arrowMarker).toBe('url(#arrow)');
+  const normalArrowWidth = await page.locator('.edge').first().evaluate(group => getComputedStyle(group.querySelector('.edge-arrowhead')!).strokeWidth);
   await page.locator('.bar[data-uid="task-design"]').hover();
   await expect(page.locator('.edge.related')).toHaveCount(2);
+  await expect.poll(() => page.locator('.edge.related').first().evaluate(group => getComputedStyle(group.querySelector('.edge-arrowhead')!).strokeWidth)).toBe(normalArrowWidth);
   await expect(page.locator('.bar')).toHaveCount(6);
   await expect(page.locator('.bar[data-uid="task-release"]')).not.toHaveClass(/dim/);
   await page.locator('.bar[data-uid="task-design"]').click();
@@ -51,9 +61,9 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   await expect(page.locator('#details')).toContainText('交互与视觉设计');
   await expect(page.locator('#details')).toContainText('需求梳理');
   await expect(page.locator('.edge.related')).toHaveCount(2);
+  await expect.poll(() => page.locator('.edge.related').first().evaluate(group => getComputedStyle(group.querySelector('.edge-arrowhead')!).strokeWidth)).toBe(normalArrowWidth);
   await expect(page.locator('.bar')).toHaveCount(3);
   await expect(page.locator('.bar[data-uid="task-release"]')).toHaveCount(0);
-  const scroll = page.locator('#scroll');
   await scroll.evaluate(element => { element.scrollLeft = 100; });
   const beforePan = await scroll.evaluate(element => element.scrollLeft);
   const scrollBox = (await scroll.boundingBox())!;

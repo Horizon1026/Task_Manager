@@ -27,6 +27,15 @@ test('collapsed parents hide every descendant and retain a single row', () => {
   assert.equal(value.items[0].height, GANTT_SIZING.rowHeight);
 });
 
+test('filtered layouts retain parent identity while only placing visible descendants', () => {
+  const value = ganttTreeLayout(project([
+    task('parent'), task('shown', { parent_uid: 'parent' }), task('hidden', { parent_uid: 'parent' }), task('root'),
+  ]), new Set(['parent', 'shown', 'root']));
+  assert.deepEqual(value.items.map(item => item.task.uid), ['parent', 'shown', 'root']);
+  assert.equal(value.items[0].isParent, true);
+  assert.ok(value.items[0].height > GANTT_SIZING.rowHeight);
+});
+
 test('dependency display projects hidden endpoints, removes internal loops and deduplicates edges', () => {
   const p = project([
     task('left', { collapse_children: true }),

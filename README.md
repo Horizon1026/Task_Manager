@@ -47,7 +47,7 @@ npm install
 npm run dev
 ```
 
-浏览器打开 `http://127.0.0.1:4310`。默认项目文件是 `data/project.yaml`，也可以用环境变量指定：
+浏览器打开 `http://127.0.0.1:4310`。默认项目文件是 `data/example_project.yaml`，也可以用环境变量指定：
 
 ```bash
 TASK_MANAGER_FILE=/path/to/project.yaml npm run dev

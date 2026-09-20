@@ -11,7 +11,7 @@
 .tree-task-cell.selected-row{background:#f0f8f3}
 .tree-task-tracks{position:absolute;top:0;bottom:0}
 /* Expanded parents are containers. A collapsed parent becomes a regular status-coloured task bar. */
-.tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar){background:transparent!important;border-width:2px;border-radius:8px;padding:7px 10px 0;align-items:flex-start;opacity:1}
+.tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar){background:transparent!important;border-width:2px;border-radius:8px;padding:var(--gantt-parent-label-top) 10px 0;align-items:flex-start;opacity:1}
 .tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar) .bar-name{align-self:flex-start;font-weight:700}
 .tree-task-tracks .collapsed-parent-task-bar{border-radius:5px;padding:0 9px;align-items:center}
 .child-task-bar{border-radius:5px}

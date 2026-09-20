@@ -1,18 +1,15 @@
 import type { Project, Task } from './model';
 import { explicitDependencyEdges, type EffectiveDependencyEdge, type DependencyKind } from './effectiveDependencies';
-import { GANTT_ROW_STRIDE, GANTT_SIZING } from './ganttSizing';
+import { GANTT_LAYOUT_SIZING } from './ganttSizing';
 
 export type GanttTreeItem = { task: Task; depth: number; top: number; height: number; isParent: boolean };
 export type GanttTreeLayout = { items: GanttTreeItem[]; height: number };
 export type DisplayDependencyEdge = { from: string; to: string; kind: DependencyKind };
 export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>; memberUids: Set<string> };
-
-// Reserve one normal row for a parent label before placing its children.  This
-// lets the left tree list share the exact same row origins as the task bars.
-const PARENT_HEADER_HEIGHT = GANTT_ROW_STRIDE;
+export type GanttLayoutSizing = { rowHeight: number; rowStride: number; rowGap: number };
 
 /** Assigns a vertical rectangle to every task; parent rectangles enclose descendants. */
-export function ganttTreeLayout(project: Project): GanttTreeLayout {
+export function ganttTreeLayout(project: Project, visibleUids: ReadonlySet<string> = new Set(project.tasks.map(task => task.uid)), sizing: GanttLayoutSizing = GANTT_LAYOUT_SIZING): GanttTreeLayout {
   const children = new Map<string | null, Task[]>();
   for (const task of project.tasks) {
     const value = children.get(task.parent_uid) ?? [];
@@ -21,20 +18,22 @@ export function ganttTreeLayout(project: Project): GanttTreeLayout {
   for (const value of children.values()) value.sort((a, b) => a.order - b.order);
   const items: GanttTreeItem[] = [];
   let cursor = 0;
-  function place(task: Task, depth: number): GanttTreeItem {
+  function place(task: Task, depth: number): GanttTreeItem | undefined {
+    if (!visibleUids.has(task.uid)) return undefined;
     const descendants = children.get(task.uid) ?? [];
+    const visibleDescendants = descendants.filter(child => visibleUids.has(child.uid));
     const top = cursor;
-    const item: GanttTreeItem = { task, depth, top, height: GANTT_SIZING.rowHeight, isParent: descendants.length > 0 };
+    const item: GanttTreeItem = { task, depth, top, height: sizing.rowHeight, isParent: descendants.length > 0 };
     items.push(item);
-    if (!descendants.length || task.collapse_children) { cursor += GANTT_ROW_STRIDE; return item; }
-    cursor += PARENT_HEADER_HEIGHT;
-    for (const child of descendants) place(child, depth + 1);
-    item.height = Math.max(PARENT_HEADER_HEIGHT + GANTT_SIZING.rowHeight, cursor - top);
-    cursor += GANTT_SIZING.rowGap;
+    if (!visibleDescendants.length || task.collapse_children) { cursor += sizing.rowStride; return item; }
+    cursor += sizing.rowStride;
+    for (const child of visibleDescendants) place(child, depth + 1);
+    item.height = Math.max(sizing.rowStride + sizing.rowHeight, cursor - top);
+    cursor += sizing.rowGap;
     return item;
   }
   for (const root of children.get(null) ?? []) place(root, 0);
-  return { items, height: Math.max(0, cursor - GANTT_SIZING.rowGap) };
+  return { items, height: Math.max(0, cursor - sizing.rowGap) };
 }
 
 /** Projects real leaf dependencies onto the currently visible collapsed ancestors. */
