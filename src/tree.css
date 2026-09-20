@@ -14,7 +14,7 @@
 .tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar){background:transparent!important;border-width:2px;border-radius:8px;padding:7px 10px 0;align-items:flex-start;opacity:1}
 .tree-task-tracks .parent-task-bar:not(.collapsed-parent-task-bar) .bar-name{align-self:flex-start;font-weight:700}
 .tree-task-tracks .collapsed-parent-task-bar{border-radius:5px;padding:0 9px;align-items:center}
-.child-task-bar{height:30px;border-radius:5px}
+.child-task-bar{border-radius:5px}
 .tree-task-tracks .task-bar.muted-row,.tree-task-cell.muted-row{opacity:.42}.tree-task-tracks .task-bar.muted-row{background:#e8ebe7;border-color:#d7ddd4;color:#a1a79d}
 /* Keep dependency arrows above task blocks but beneath the frozen task list. */
 .tree-gantt-body .dependency-layer{z-index:20;color:#087f73;pointer-events:none;overflow:visible}

@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from 'yaml';
 import { selectChoice } from './select';
+import { GANTT_ROW_STRIDE, GANTT_SIZING } from '../src/ganttSizing';
 
 test.beforeEach(async ({ page, request }) => {
   await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
@@ -64,6 +65,26 @@ test('expands the workspace and timeline to a wide browser viewport', async ({ p
   const scrollWidth = await page.locator('.gantt-scroll').evaluate(node => node.clientWidth);
   const taskListWidth = await page.locator('.tree-task-labels').evaluate(node => node.getBoundingClientRect().width);
   await expect.poll(async () => (await page.locator('.time-heading').boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(scrollWidth - taskListWidth);
+});
+test('zooms the timeline horizontally while keeping task rows unchanged', async ({ page }) => {
+  await page.getByRole('button', { name: '天', exact: true }).click();
+  const bar = page.getByTestId('bar-task-engine');
+  const before = (await bar.boundingBox())!;
+  const rowTops = await page.locator('.tree-task-cell').evaluateAll(nodes => nodes.slice(0, 2).map(node => node.getBoundingClientRect().top));
+  expect(rowTops[1] - rowTops[0]).toBe(GANTT_ROW_STRIDE);
+  await expect(bar).toHaveCSS('height', `${GANTT_SIZING.barHeight}px`);
+  const rowHeight = await page.locator('.tree-task-tracks').evaluate(node => node.getBoundingClientRect().height);
+  await expect(page.getByRole('button', { name: '重置甘特图缩放' })).toHaveText('100%');
+
+  await page.getByRole('button', { name: '放大甘特图' }).click();
+  await page.getByRole('button', { name: '放大甘特图' }).click();
+  await expect(page.getByRole('button', { name: '重置甘特图缩放' })).toHaveText('150%');
+  await expect.poll(async () => (await bar.boundingBox())!.width).toBeCloseTo(before.width * 1.5, 0);
+  await expect.poll(async () => page.locator('.tree-task-tracks').evaluate(node => node.getBoundingClientRect().height)).toBe(rowHeight);
+
+  await page.getByRole('button', { name: '重置甘特图缩放' }).click();
+  await expect(page.getByRole('button', { name: '重置甘特图缩放' })).toHaveText('100%');
+  await expect.poll(async () => (await bar.boundingBox())!.width).toBeCloseTo(before.width, 0);
 });
 test('holding M focuses direct dependencies in read-only mode and releasing it restores the view', async ({ page }) => {
   const resize = (await page.getByRole('separator', { name: '调整任务列表宽度' }).boundingBox())!;

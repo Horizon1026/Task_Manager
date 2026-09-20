@@ -1,4 +1,5 @@
 import type { GanttTreeItem } from './ganttLayout';
+import { GANTT_BAR_TOP, GANTT_SIZING } from './ganttSizing';
 
 export function GanttTaskLabel({ item, isParent, listWidth, selected, dimmed, locked, total, onHover, onSelect, onOrder, onSiblingOrder, onToggleCollapse }: {
   item: GanttTreeItem;
@@ -14,8 +15,8 @@ export function GanttTaskLabel({ item, isParent, listWidth, selected, dimmed, lo
   onSiblingOrder: (uid: string, targetUid: string) => void;
   onToggleCollapse: (uid: string) => void;
 }) {
-  const task = item.task, top = item.top + (isParent ? 4 : 6);
-  return <div className={`gantt-row tree-task-cell ${isParent ? 'tree-parent-cell' : ''} ${selected === task.uid ? 'selected-row' : ''} ${dimmed ? 'muted-row' : ''}`} data-task-uid={task.uid} style={{ top, height: 30, width: listWidth, paddingLeft: 8 + item.depth * 18, zIndex: item.depth + 6 }} onMouseEnter={e => onHover({ uid: task.uid, x: e.clientX, y: e.clientY })} onMouseLeave={() => onHover(null)} onDoubleClick={e => { if (locked || !isParent || (e.target as HTMLElement).closest('.row-order, .row-grip')) return; e.preventDefault(); onToggleCollapse(task.uid); }} onDragOver={e => { if (!locked) e.preventDefault(); }} onDrop={e => { if (locked) return; const uid = e.dataTransfer.getData('text/mission-uid'); if (uid) { e.preventDefault(); onSiblingOrder(uid, task.uid); } }}>
+  const task = item.task, top = item.top + (item.isParent ? GANTT_SIZING.rowGap : GANTT_BAR_TOP);
+  return <div className={`gantt-row tree-task-cell ${isParent ? 'tree-parent-cell' : ''} ${selected === task.uid ? 'selected-row' : ''} ${dimmed ? 'muted-row' : ''}`} data-task-uid={task.uid} style={{ top, height: GANTT_SIZING.barHeight, width: listWidth, paddingLeft: 8 + item.depth * 18, zIndex: item.depth + 6 }} onMouseEnter={e => onHover({ uid: task.uid, x: e.clientX, y: e.clientY })} onMouseLeave={() => onHover(null)} onDoubleClick={e => { if (locked || !isParent || (e.target as HTMLElement).closest('.row-order, .row-grip')) return; e.preventDefault(); onToggleCollapse(task.uid); }} onDragOver={e => { if (!locked) e.preventDefault(); }} onDrop={e => { if (locked) return; const uid = e.dataTransfer.getData('text/mission-uid'); if (uid) { e.preventDefault(); onSiblingOrder(uid, task.uid); } }}>
     <span className="tree-branch">{isParent ? task.collapse_children ? '▸' : '▾' : item.depth ? '└' : ''}</span>
     <span className="row-grip" draggable={!locked} onDragStart={e => { if (locked) return e.preventDefault(); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/mission-uid', task.uid); }}>⠿</span>
     <span className="row-number" title={task.uid}>{task.uid}</span>

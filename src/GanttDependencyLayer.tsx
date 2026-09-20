@@ -1,4 +1,5 @@
 import type { DisplayDependencyEdge, GanttTreeItem } from './ganttLayout';
+import { GANTT_SIZING } from './ganttSizing';
 import { dependencyCurve } from './ganttGeometry';
 import type { Scheduled } from './schedule';
 
@@ -19,8 +20,8 @@ export function GanttDependencyLayer({ edges, schedule, itemsByUid, activeUid, w
       const fromItem = itemsByUid.get(edge.from), toItem = itemsByUid.get(edge.to);
       if (!fromSchedule || !toSchedule || !fromItem || !toItem) return null;
       const curve = dependencyCurve(
-        { x: slotToX(fromSchedule.end), y: fromItem.top + 20 },
-        { x: slotToX(toSchedule.start), y: toItem.top + 20 },
+        { x: slotToX(fromSchedule.end), y: fromItem.top + GANTT_SIZING.rowHeight / 2 },
+        { x: slotToX(toSchedule.start), y: toItem.top + GANTT_SIZING.rowHeight / 2 },
       );
       const kindClass = edge.kind === 'assignee' ? 'assignee-dependency' : 'explicit-dependency';
       return <g key={`${edge.from}-${edge.to}`}>

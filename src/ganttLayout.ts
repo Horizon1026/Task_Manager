@@ -1,16 +1,15 @@
 import type { Project, Task } from './model';
 import { explicitDependencyEdges, type EffectiveDependencyEdge, type DependencyKind } from './effectiveDependencies';
+import { GANTT_ROW_STRIDE, GANTT_SIZING } from './ganttSizing';
 
 export type GanttTreeItem = { task: Task; depth: number; top: number; height: number; isParent: boolean };
 export type GanttTreeLayout = { items: GanttTreeItem[]; height: number };
 export type DisplayDependencyEdge = { from: string; to: string; kind: DependencyKind };
 export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>; memberUids: Set<string> };
 
-const LEAF_HEIGHT = 42;
-const SIBLING_GAP = 6;
 // Reserve one normal row for a parent label before placing its children.  This
 // lets the left tree list share the exact same row origins as the task bars.
-const PARENT_HEADER_HEIGHT = LEAF_HEIGHT + SIBLING_GAP;
+const PARENT_HEADER_HEIGHT = GANTT_ROW_STRIDE;
 
 /** Assigns a vertical rectangle to every task; parent rectangles enclose descendants. */
 export function ganttTreeLayout(project: Project): GanttTreeLayout {
@@ -25,17 +24,17 @@ export function ganttTreeLayout(project: Project): GanttTreeLayout {
   function place(task: Task, depth: number): GanttTreeItem {
     const descendants = children.get(task.uid) ?? [];
     const top = cursor;
-    const item: GanttTreeItem = { task, depth, top, height: LEAF_HEIGHT, isParent: descendants.length > 0 };
+    const item: GanttTreeItem = { task, depth, top, height: GANTT_SIZING.rowHeight, isParent: descendants.length > 0 };
     items.push(item);
-    if (!descendants.length || task.collapse_children) { cursor += LEAF_HEIGHT + SIBLING_GAP; return item; }
+    if (!descendants.length || task.collapse_children) { cursor += GANTT_ROW_STRIDE; return item; }
     cursor += PARENT_HEADER_HEIGHT;
     for (const child of descendants) place(child, depth + 1);
-    item.height = Math.max(PARENT_HEADER_HEIGHT + LEAF_HEIGHT, cursor - top);
-    cursor += SIBLING_GAP;
+    item.height = Math.max(PARENT_HEADER_HEIGHT + GANTT_SIZING.rowHeight, cursor - top);
+    cursor += GANTT_SIZING.rowGap;
     return item;
   }
   for (const root of children.get(null) ?? []) place(root, 0);
-  return { items, height: Math.max(0, cursor - SIBLING_GAP) };
+  return { items, height: Math.max(0, cursor - GANTT_SIZING.rowGap) };
 }
 
 /** Projects real leaf dependencies onto the currently visible collapsed ancestors. */

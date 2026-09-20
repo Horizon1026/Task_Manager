@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { stringify } from 'yaml';
+import { GANTT_SIZING } from '../src/ganttSizing';
 
 test.beforeEach(async ({ page, request }) => {
   await request.post('/api/projects/select', { data: { name: 'project.yaml' } });
@@ -90,6 +91,12 @@ test('exported parent tasks ignore clicks while their collapse control remains a
 
   const parent = page.locator('.bar.parent[data-uid="task-discovery"]');
   await expect(parent).toBeVisible();
+  const parentLabel = page.locator('.label.parent[data-uid="task-discovery"]');
+  const childLabel = page.locator('.label[data-uid="task-design"]');
+  const parentLabelBox = (await parentLabel.boundingBox())!;
+  const childLabelBox = (await childLabel.boundingBox())!;
+  expect(parentLabelBox.height).toBe(GANTT_SIZING.barHeight);
+  expect(parentLabelBox.y + parentLabelBox.height).toBeLessThan(childLabelBox.y);
   const scroll = page.locator('#scroll');
   await scroll.evaluate(element => { element.scrollLeft = 100; });
   const beforePan = await scroll.evaluate(element => element.scrollLeft);

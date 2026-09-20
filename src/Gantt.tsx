@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { type Project, type Scale, type Task } from './model';
 import { dayNumber, dateString, durationBetween, fromSlot, makeCalendar, nextWorkSlot, type Scheduled, todayLocal } from './schedule';
 import { alignStart, pixelsPerDay, timeColumns } from './timeline';
 import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from './ganttLayout';
+import { GANTT_BAR_TOP, GANTT_PARENT_INSET, GANTT_PARENT_MIN_HEIGHT, GANTT_SIZING } from './ganttSizing';
 import type { RelationDragController } from './useRelationDrag';
 import { GanttDependencyLayer } from './GanttDependencyLayer';
 import { GanttHoverCard } from './GanttHoverCard';
@@ -13,6 +14,7 @@ import './ganttOverrides.css';
 
 type Drag = { uid: string; mode: 'move' | 'start' | 'end'; x: number; y: number; dx: number; dy: number; moved: boolean };
 type Props = { project: Project; schedule: Map<string, Scheduled>; dependencyEdges: EffectiveDependencyEdge[]; scale: Scale; selected: string | null; filter: { labels: string[]; mode: 'and' | 'or' }; focusUid: string | null; canFocus: boolean; onFocusChange: (uid: string | null) => void; onSelect: (uid: string | null) => void; onChange: (task: Task) => void; onOrder: (uid: string, order: number) => void; onSiblingOrder: (uid: string, targetUid: string) => void; onToggleCollapse: (uid: string) => void; relation: RelationDragController; notify: (message: string) => void };
+const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4] as const;
 
 export function Gantt({ project, schedule, dependencyEdges, scale, selected, filter, focusUid, canFocus, onFocusChange, onSelect, onChange, onOrder, onSiblingOrder, onToggleCollapse, relation, notify }: Props) {
   const allTasks = [...project.tasks].sort((a, b) => a.order - b.order);
@@ -40,7 +42,8 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   const displayedDependencyEdges = useMemo(() => displayDependencyEdges(dependencyProject, displayedUids, dependencyEdges), [dependencyProject, displayedUids, dependencyEdges]);
   const [taskListWidth, setTaskListWidth] = useState(260);
   const [viewportWidth, setViewportWidth] = useState(1360);
-  const ppd = pixelsPerDay[scale], pps = ppd / 2, calendar = useMemo(() => makeCalendar(project), [project]);
+  const [zoom, setZoom] = useState<number>(1);
+  const ppd = pixelsPerDay[scale] * zoom, pps = ppd / 2, calendar = useMemo(() => makeCalendar(project), [project]);
   const origin = alignStart(Math.min(dayNumber(project.project.start_date) - 2, ...[...schedule.values()].map(value => Math.floor(value.start / 2) - 2)), scale);
   const timelineViewportWidth = Math.max(1100, viewportWidth - taskListWidth);
   const end = Math.max(origin + Math.ceil(timelineViewportWidth / ppd), ...[...schedule.values()].map(value => Math.ceil(value.end / 2) + 10));
@@ -48,7 +51,7 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hover, setHover] = useState<{ uid: string; x: number; y: number } | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const dragRef = useRef<Drag | null>(null), resizeRef = useRef<{ x: number; width: number } | null>(null), panRef = useRef<{ x: number; scrollLeft: number; moved: boolean } | null>(null), focusPositionRef = useRef<{ scrollLeft: number; windowX: number; windowY: number } | null>(null), skipClick = useRef(false), scroll = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<Drag | null>(null), resizeRef = useRef<{ x: number; width: number } | null>(null), panRef = useRef<{ x: number; scrollLeft: number; moved: boolean } | null>(null), focusPositionRef = useRef<{ scrollLeft: number; windowX: number; windowY: number } | null>(null), zoomAnchorRef = useRef<number | null>(null), skipClick = useRef(false), scroll = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(hover), focusRef = useRef(focusUid), canFocusRef = useRef(canFocus), relationRef = useRef(relation.drag);
   hoverRef.current = hover; focusRef.current = focusUid; canFocusRef.current = canFocus; relationRef.current = relation.drag;
   useEffect(() => {
@@ -60,6 +63,13 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+  useLayoutEffect(() => {
+    const node = scroll.current, anchorSlot = zoomAnchorRef.current;
+    if (!node || anchorSlot === null) return;
+    zoomAnchorRef.current = null;
+    const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
+    node.scrollLeft = Math.max(0, (anchorSlot - origin * 2) * pps - visibleTimelineWidth / 2);
+  }, [zoom, origin, pps, taskListWidth]);
   useEffect(() => {
     const releaseFocus = () => {
       if (!focusRef.current) return;
@@ -89,6 +99,15 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   useEffect(() => { if (focusUid && !canFocus) onFocusChange(null); }, [focusUid, canFocus, onFocusChange]);
   const x = (slot: number) => (slot - origin * 2) * pps;
   const isParent = (task: Task) => project.tasks.some(value => value.parent_uid === task.uid);
+  function changeZoom(next: number) {
+    const node = scroll.current;
+    if (node) {
+      const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
+      zoomAnchorRef.current = origin * 2 + (node.scrollLeft + visibleTimelineWidth / 2) / pps;
+    }
+    setZoom(next);
+  }
+  const zoomIndex = ZOOM_LEVELS.indexOf(zoom as typeof ZOOM_LEVELS[number]);
   function begin(e: ReactPointerEvent<HTMLElement>, task: Task, mode: Drag['mode']) {
     if (focusUid) return;
     if (e.button !== 0 && e.button !== 2) return;
@@ -155,7 +174,7 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   }
   const hoverTask = hover ? tasks.find(task => task.uid === hover.uid) : undefined;
   return <div className={`gantt-section ${focusUid ? 'dependency-focus-mode' : ''}`}>
-    <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>{focusUid ? `正在查看「${project.tasks.find(task => task.uid === focusUid)?.name}」的直接依赖 · 只读 · 松开 M 恢复` : '右键拖动设置依赖 · R + 右键拖动设置父任务 · 悬浮按住 M 聚焦'}</span><button disabled={!!focusUid} onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div>
+    <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>{focusUid ? `正在查看「${project.tasks.find(task => task.uid === focusUid)?.name}」的直接依赖 · 只读 · 松开 M 恢复` : '右键拖动设置依赖 · R + 右键拖动设置父任务 · 悬浮按住 M 聚焦'}</span><div className="gantt-caption-actions"><div className="gantt-zoom" role="group" aria-label="甘特图水平缩放"><button type="button" aria-label="缩小甘特图" title="缩小时间轴" disabled={zoomIndex <= 0} onClick={() => changeZoom(ZOOM_LEVELS[zoomIndex - 1])}>−</button><button type="button" className="zoom-value" aria-label="重置甘特图缩放" title="恢复 100%" disabled={zoom === 1} onClick={() => changeZoom(1)}>{Math.round(zoom * 100)}%</button><button type="button" aria-label="放大甘特图" title="放大时间轴，让半天任务更宽" disabled={zoomIndex >= ZOOM_LEVELS.length - 1} onClick={() => changeZoom(ZOOM_LEVELS[zoomIndex + 1])}>＋</button></div><button disabled={!!focusUid} onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div></div>
     <div className="gantt-scroll" ref={scroll} onPointerDown={beginPan} onPointerMove={pan} onPointerUp={finishPan} onPointerCancel={finishPan} onScroll={e => setScrollLeft(e.currentTarget.scrollLeft)} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
       <div className="gantt-header"><div className="task-heading" style={{ width: taskListWidth, minWidth: taskListWidth }}>任务 / 执行人<span>{tasks.length} 条</span><span role="separator" aria-label="调整任务列表宽度" aria-orientation="vertical" className="task-list-resize-handle" onPointerDown={beginListResize} onPointerMove={resizeList} onPointerUp={finishListResize} onPointerCancel={finishListResize} /></div><div className="time-heading" style={{ width }}>{columns.map(column => <div key={column.start} style={{ left: (column.start - origin) * ppd, width: (column.end - column.start) * ppd }}>{column.label}{scale === 'day' && <small>上午　下午</small>}</div>)}</div></div>
       <div className="gantt-body tree-gantt-body" style={{ minHeight: height }}>
@@ -168,7 +187,7 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
           const parent = isParent(task), color = project.project.status_colors[task.status];
           const statusStyle = parent && !task.collapse_children ? { borderColor: color.border, color: color.text } : { backgroundColor: color.fill, borderColor: color.border, color: color.text };
           const dimmed = !!focus && !focus.coreUids.has(task.uid);
-          return scheduled && <div role="button" tabIndex={focusUid ? -1 : 0} key={task.uid} data-task-uid={task.uid} data-testid={`bar-${task.uid}`} aria-label={`任务条 ${task.name}`} className={`task-bar ${parent ? 'parent-task-bar' : 'child-task-bar'} ${parent && task.collapse_children ? 'collapsed-parent-task-bar' : ''} ${scheduled.late ? 'late' : ''} ${blocked ? 'blocked' : ''} ${active ? 'dragging' : ''} ${dimmed ? 'muted-row' : ''} ${task.uid === focusUid ? 'focus-source' : ''} ${relation.drag?.mode === 'parent' && relation.drag.target === task.uid ? relation.parentError ? 'parent-drop-invalid' : 'parent-drop-valid' : ''}`} style={{ left, width: barWidth, top: item.top + (parent ? 4 : 6), height: parent ? Math.max(34, item.height - 8) : 30, zIndex: item.depth + 3, ...statusStyle, ...(scheduled.late ? { borderColor: '#d37061', borderWidth: 2 } : {}) }} onContextMenu={e => e.preventDefault()} onPointerDown={e => focusUid ? beginFocusPan(e) : parent && e.button === 0 ? beginParentPan(e) : begin(e, task, 'move')} onPointerMove={moving} onPointerUp={finish} onPointerCancel={cancel} onClick={() => { if (!focusUid && !skipClick.current) onSelect(task.uid); skipClick.current = false; }} onKeyDown={e => { if (!focusUid && e.key === 'Enter') onSelect(task.uid); if (e.key === 'Escape') cancel(); }} onMouseEnter={e => { if (!focusUid && !dragRef.current && !relation.drag) { const value = { uid: task.uid, x: e.clientX, y: e.clientY }; hoverRef.current = value; setHover(value); } }} onMouseLeave={() => { if (!focusUid) { hoverRef.current = null; setHover(null); } }}><span className="bar-handle left" onPointerDown={focusUid ? undefined : e => begin(e, task, 'start')} /><span className="bar-name">{task.name}</span><span className="bar-handle right" onPointerDown={focusUid ? undefined : e => begin(e, task, 'end')} /></div>;
+          return scheduled && <div role="button" tabIndex={focusUid ? -1 : 0} key={task.uid} data-task-uid={task.uid} data-testid={`bar-${task.uid}`} aria-label={`任务条 ${task.name}`} className={`task-bar ${parent ? 'parent-task-bar' : 'child-task-bar'} ${parent && task.collapse_children ? 'collapsed-parent-task-bar' : ''} ${scheduled.late ? 'late' : ''} ${blocked ? 'blocked' : ''} ${active ? 'dragging' : ''} ${dimmed ? 'muted-row' : ''} ${task.uid === focusUid ? 'focus-source' : ''} ${relation.drag?.mode === 'parent' && relation.drag.target === task.uid ? relation.parentError ? 'parent-drop-invalid' : 'parent-drop-valid' : ''}`} style={{ left, width: barWidth, top: item.top + (parent ? GANTT_PARENT_INSET : GANTT_BAR_TOP), height: parent ? Math.max(GANTT_PARENT_MIN_HEIGHT, item.height - GANTT_PARENT_INSET * 2) : GANTT_SIZING.barHeight, zIndex: item.depth + 3, ...statusStyle, ...(scheduled.late ? { borderColor: '#d37061', borderWidth: 2 } : {}) }} onContextMenu={e => e.preventDefault()} onPointerDown={e => focusUid ? beginFocusPan(e) : parent && e.button === 0 ? beginParentPan(e) : begin(e, task, 'move')} onPointerMove={moving} onPointerUp={finish} onPointerCancel={cancel} onClick={() => { if (!focusUid && !skipClick.current) onSelect(task.uid); skipClick.current = false; }} onKeyDown={e => { if (!focusUid && e.key === 'Enter') onSelect(task.uid); if (e.key === 'Escape') cancel(); }} onMouseEnter={e => { if (!focusUid && !dragRef.current && !relation.drag) { const value = { uid: task.uid, x: e.clientX, y: e.clientY }; hoverRef.current = value; setHover(value); } }} onMouseLeave={() => { if (!focusUid) { hoverRef.current = null; setHover(null); } }}><span className="bar-handle left" onPointerDown={focusUid ? undefined : e => begin(e, task, 'start')} /><span className="bar-name">{task.name}</span><span className="bar-handle right" onPointerDown={focusUid ? undefined : e => begin(e, task, 'end')} /></div>;
         })}</div>
         {!tasks.length && <div className="empty">还没有任务。点击“新增任务”开始安排。</div>}
         <GanttDependencyLayer edges={displayedDependencyEdges} schedule={schedule} itemsByUid={byUid} activeUid={focusUid ?? selected} width={width} height={height} left={taskListWidth} slotToX={x} />

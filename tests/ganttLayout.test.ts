@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
 import { project, task } from './fixtures';
 import { scheduleProjectPlan } from '../src/schedule';
+import { GANTT_SIZING } from '../src/ganttSizing';
 
 test('tree Gantt layout nests child rectangles inside each parent rectangle', () => {
   const value = ganttTreeLayout(project([
@@ -23,7 +24,7 @@ test('collapsed parents hide every descendant and retain a single row', () => {
     task('nested', { parent_uid: 'child' }), task('root'),
   ]));
   assert.deepEqual(value.items.map(item => item.task.uid), ['parent', 'root']);
-  assert.equal(value.items[0].height, 42);
+  assert.equal(value.items[0].height, GANTT_SIZING.rowHeight);
 });
 
 test('dependency display projects hidden endpoints, removes internal loops and deduplicates edges', () => {
