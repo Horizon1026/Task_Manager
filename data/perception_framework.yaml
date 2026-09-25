@@ -1,0 +1,974 @@
+version: 1
+project:
+  name: 视觉感知训练框架开发计划
+  start_date: '2026-09-28'
+  default_scale: week
+  default_filter:
+    labels: []
+    mode: or
+  allow_assignee_parallel_tasks: true
+  assignees:
+  - 未指定
+  status_colors:
+    未开始:
+      fill: '#e5e7eb'
+      border: '#cbd5e1'
+      text: '#64748b'
+    进行中:
+      fill: '#dbeafe'
+      border: '#93c5fd'
+      text: '#1d4ed8'
+    验收中:
+      fill: '#ffedd5'
+      border: '#fdba74'
+      text: '#c2410c'
+    已完成:
+      fill: '#dcfce7'
+      border: '#86efac'
+      text: '#15803d'
+calendar:
+  years: []
+  overrides: []
+tasks:
+- uid: setup
+  order: 1
+  name: 全新工程基础
+  description: 建立独立代码库、包结构、开发命令和测试入口。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: p-scaffold
+  order: 2
+  name: 创建独立工程与包结构
+  description: 新建框架包、依赖声明、示例和 tests 目录；确定公开 API 与内部模块边界。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: setup
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: p-tooling
+  order: 3
+  name: 建立测试与质量检查入口
+  description: 配置 pytest、静态检查和最小 CI/本地命令，为后续模块提供一致的验收入口。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: setup
+  collapse_children: false
+  dependencies:
+  - p-scaffold
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: p-entry
+  order: 4
+  name: 建立 Python 实验入口
+  description: 提供 Python 组装示例和单卡运行命令；后续实验只添加实际使用的组件。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: setup
+  collapse_children: false
+  dependencies:
+  - p-tooling
+  labels:
+  - 验收
+  - 第一版
+  allow_rest_day_work: false
+- uid: core
+  order: 5
+  name: Core：最小公共契约
+  description: 只放实际共享的数据结构、设备迁移和运行上下文；分布式原语后补。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: c-batch
+  order: 6
+  name: 定义单样本与批量契约
+  description: 定义 Sample/Batch、metadata 和分类 target 的 Collator 前后形状。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: core
+  collapse_children: false
+  dependencies:
+  - p-scaffold
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: c-tree
+  order: 7
+  name: 实现递归设备迁移
+  description: 支持 Tensor、容器与 dataclass；先处理容器再考虑自定义 .to()，避免递归自调用。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: core
+  collapse_children: false
+  dependencies:
+  - c-batch
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: c-context
+  order: 8
+  name: 定义最小 StepContext
+  description: 仅保留当前 Task/Trainer 需要的 epoch、global_step、optimizer_step 与 training。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: core
+  collapse_children: false
+  dependencies:
+  - c-batch
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: c-dist
+  order: 9
+  name: 抽取轻量分布式原语
+  description: 仅在 DDP 集成时提供 rank/world size、reduce、gather 与 barrier；不为单卡切片设前置。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: core
+  collapse_children: false
+  dependencies:
+  - gate-second
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: data
+  order: 10
+  name: Data：样本到 Batch
+  description: Dataset 保留数据语义；Transform 操作完整样本；Collator 负责批量形状。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: d-class-dataset
+  order: 11
+  name: 新建分类 Dataset 与 Transform
+  description: 为首个分类实验新建 Dataset、标签映射与样本级 Transform；只返回单样本。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: data
+  collapse_children: false
+  dependencies:
+  - c-batch
+  - p-entry
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: d-class-collate
+  order: 12
+  name: 分类 Batch 组装
+  description: 固定形状 stack，并确认标签从 Sample 标量变成 Batch [B]。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: data
+  collapse_children: false
+  dependencies:
+  - d-class-dataset
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: d-seg
+  order: 13
+  name: 分割数据契约与几何 Transform
+  description: 新建语义分割 Dataset、单图 [H,W] 到 [B,H,W] 的契约和 ignore/valid mask；同步图像与 mask 几何变换。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: data
+  collapse_children: false
+  dependencies:
+  - gate-first
+  - c-batch
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: d-detect
+  order: 14
+  name: 检测变长数据与 Collator
+  description: 单图 boxes [N,4]；Batch 保留 target 列表，padding 图像并记录原图尺寸。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: data
+  collapse_children: false
+  dependencies:
+  - gate-second
+  - c-batch
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: d-dense
+  order: 15
+  name: 光流或深度数据接入
+  description: 由实际选择的任务确定稠密 target、valid mask 和 resize/crop 契约。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: data
+  collapse_children: false
+  dependencies:
+  - gate-detection
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: model
+  order: 16
+  name: Model：可微分输出
+  description: 模型只做前向；输出结构随实际任务演进，不预建万能 Backbone/Head。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: m-class
+  order: 17
+  name: 新建分类模型
+  description: 实现首个轻量分类模型，只返回训练所需 logits；暂不建立通用 Backbone/Head 层。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: model
+  collapse_children: false
+  dependencies:
+  - c-batch
+  - p-entry
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: m-seg
+  order: 18
+  name: 新建分割模型
+  description: 实现第二个任务的分割模型；仅在多输出时引入结构化 ModelOutput。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: model
+  collapse_children: false
+  dependencies:
+  - gate-first
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: m-detect
+  order: 19
+  name: 检测模型输出契约
+  description: 按选定检测模型明确 logits、boxes、辅助输出与坐标系。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: model
+  collapse_children: false
+  dependencies:
+  - gate-second
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: m-geometry
+  order: 20
+  name: 多视图/三维模型输入输出
+  description: 真实多视图或 Occupancy 用例出现后确定模型结构与几何输出。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: model
+  collapse_children: false
+  dependencies:
+  - s-geometry
+  - gate-second
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: objective
+  order: 21
+  name: Objective：训练目标
+  description: 简单任务可在 Task 内计算 loss；复杂目标独立成无状态或有状态 Objective。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: o-class
+  order: 22
+  name: 分类 loss 与数值边界
+  description: 实现 CE、空 batch/非有限值处理；第一版不要求独立 Objective 类。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: objective
+  collapse_children: false
+  dependencies:
+  - d-class-collate
+  - m-class
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: o-seg
+  order: 23
+  name: 分割 loss 组合
+  description: 按真实任务实现 CE/Dice 与 ignore/valid mask；多 loss 时再抽 LossResult。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: objective
+  collapse_children: false
+  dependencies:
+  - d-seg
+  - m-seg
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: o-detect
+  order: 24
+  name: 检测匹配与损失
+  description: 按模型确定 matching、分类和 box loss；处理空 target。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: objective
+  collapse_children: false
+  dependencies:
+  - d-detect
+  - m-detect
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: o-iter
+  order: 25
+  name: 逐层监督与参数化权重
+  description: 仅在真实迭代输出出现时加入；可训练权重纳入设备、optimizer、DDP 和 checkpoint。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: objective
+  collapse_children: false
+  dependencies:
+  - gate-detection
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: evaluation
+  order: 26
+  name: Prediction & Evaluation：评估空间
+  description: 后处理只做评估空间还原；Evaluator 管理指标累积与同步。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: e-class
+  order: 27
+  name: 分类指标
+  description: 手算 Accuracy/F1 小样本核对；保持与模型输出解耦。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: evaluation
+  collapse_children: false
+  dependencies:
+  - d-class-collate
+  - m-class
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: e-seg
+  order: 28
+  name: 分割后处理与 mIoU
+  description: 去 padding、恢复评估尺寸并核对混淆矩阵/ignore_index。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: evaluation
+  collapse_children: false
+  dependencies:
+  - d-seg
+  - m-seg
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: e-detect
+  order: 29
+  name: 检测坐标还原与 COCO 指标
+  description: 从模型空间恢复原图 boxes，接入 COCO evaluator 并处理重复 image_id。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: evaluation
+  collapse_children: false
+  dependencies:
+  - d-detect
+  - m-detect
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: e-distributed
+  order: 30
+  name: 分布式评估同步
+  description: 充分统计量 all-reduce；检测记录 gather。仅在 DDP 验收前实施。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: evaluation
+  collapse_children: false
+  dependencies:
+  - c-dist
+  - e-seg
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: task
+  order: 31
+  name: Task：任务语义编排
+  description: 连接当前任务实际使用的 Model、loss 和 evaluator；不按 Dataset 名称分支。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: t-class
+  order: 32
+  name: 分类 Task 接口
+  description: 训练返回 loss，验证更新分类指标；定义 Trainer 消费的最小 StepResult。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: task
+  collapse_children: false
+  dependencies:
+  - c-tree
+  - c-context
+  - o-class
+  - e-class
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: t-seg
+  order: 33
+  name: 分割 Task 接入
+  description: 验证同一 Trainer 能处理分割 loss、后处理和指标，抽出真正复用的边界。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: task
+  collapse_children: false
+  dependencies:
+  - d-seg
+  - m-seg
+  - o-seg
+  - e-seg
+  - gate-first
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: t-detect
+  order: 34
+  name: 检测 Task 接入
+  description: 连接变长 target、模型输出、matching loss 和 COCO 评估。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: task
+  collapse_children: false
+  dependencies:
+  - d-detect
+  - m-detect
+  - o-detect
+  - e-detect
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: t-stateful
+  order: 35
+  name: 状态模型 Task
+  description: 仅当跨窗口 hidden/map/preintegration 状态需求明确时加入生命周期方法。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: task
+  collapse_children: false
+  dependencies:
+  - s-sync
+  - m-geometry
+  - gate-second
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: runtime
+  order: 36
+  name: Runtime Services：持久状态与日志
+  description: Checkpoint 负责训练状态；Logger/Callback 从实际重复需求提取。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: r-checkpoint
+  order: 37
+  name: 完整 checkpoint 与恢复
+  description: 保存 model、optimizer、scheduler、scaler、step、随机数状态；有状态 Objective 也保存 state_dict。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: runtime
+  collapse_children: false
+  dependencies:
+  - p-tooling
+  - m-class
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: r-logging
+  order: 38
+  name: 最小日志输出
+  description: 先记录标量和主指标；图像、表格及 Callback 在出现复用需求时增加。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: runtime
+  collapse_children: false
+  dependencies:
+  - t-class
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: r-callback
+  order: 39
+  name: 可选 Callback 扩展
+  description: 仅在 checkpoint、EMA、可视化等行为有两个以上复用场景时抽象。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: runtime
+  collapse_children: false
+  dependencies:
+  - gate-second
+  - r-logging
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: engine
+  order: 40
+  name: Engine：任务无关训练机制
+  description: 只调用 Task、反传 loss、调度优化器并驱动验证；不含任务类型分支。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: g-single
+  order: 41
+  name: 单卡训练与验证 Engine
+  description: 从零实现单卡训练与验证循环；正确处理梯度累积尾窗、AMP、scheduler 时机、非有限 loss 与指标重置。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 5
+  parent_uid: engine
+  collapse_children: false
+  dependencies:
+  - c-tree
+  - t-class
+  - r-checkpoint
+  - p-tooling
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: g-ddp
+  order: 42
+  name: DDP 与 no_sync 集成
+  description: 单卡链路稳定后接入 sampler.set_epoch、no_sync、指标同步与 rank 0 checkpoint。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: engine
+  collapse_children: false
+  dependencies:
+  - gate-second
+  - c-dist
+  - e-distributed
+  - g-single
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: experiment
+  order: 43
+  name: Experiment：组装与验收
+  description: Python 显式组装实际组件；YAML/registry 仅在批量切换确有需求时引入。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: x-first
+  order: 44
+  name: 首个分类实验
+  description: 运行单卡训练、验证、恢复与 1–4 batch 过拟合；记录损失和指标作为首个验收结果。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - d-class-collate
+  - t-class
+  - r-checkpoint
+  - g-single
+  labels:
+  - 第一版
+  allow_rest_day_work: false
+- uid: gate-first
+  order: 45
+  name: 验收：首个纵向切片
+  description: 分类任务端到端可复现；确认基础契约足够，暂不引入传感器、通用输出及 registry。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - x-first
+  labels:
+  - 验收
+  - 第一版
+  allow_rest_day_work: false
+- uid: x-second
+  order: 46
+  name: 分割实验
+  description: 用同一 Engine 运行新建分割任务，核对 ignore/valid mask、评估空间与 1–4 batch 过拟合。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 2
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - t-seg
+  - g-single
+  labels:
+  - 第二任务
+  allow_rest_day_work: false
+- uid: gate-second
+  order: 47
+  name: 验收：共享边界
+  description: 比较分类与分割两条任务链路，只保留有实际复用的抽象并冻结基础契约。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - x-second
+  labels:
+  - 验收
+  - 第二任务
+  allow_rest_day_work: false
+- uid: x-detection
+  order: 48
+  name: 检测实验
+  description: 跑通变长目标、坐标转换、空标注、训练恢复和 COCO 指标。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - t-detect
+  - g-single
+  labels:
+  - 检测
+  allow_rest_day_work: false
+- uid: gate-detection
+  order: 49
+  name: 验收：检测链路
+  description: 确认模型空间、数据空间和评估空间一致；重新运行分类与分割回归测试。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 1
+  parent_uid: experiment
+  collapse_children: false
+  dependencies:
+  - x-detection
+  labels:
+  - 验收
+  - 检测
+  allow_rest_day_work: false
+- uid: sensors
+  order: 50
+  name: Sensors & Geometry：按需扩展
+  description: 仅在 LiDAR/IMU、Occupancy 或多视图任务立项后启动，不阻塞二维链路。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: s-units
+  order: 51
+  name: 时间与坐标系契约
+  description: 定义 int64 纳秒、单位、frame 方向、刚体变换和标定；验证 compose/invert。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: sensors
+  collapse_children: false
+  dependencies:
+  - gate-second
+  - c-batch
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: s-geometry
+  order: 52
+  name: 相机/点云几何工具
+  description: 实现任务实际使用的投影、反投影、点变换及对齐；避免一次建齐工具箱。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: sensors
+  collapse_children: false
+  dependencies:
+  - s-units
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: s-sync
+  order: 53
+  name: 多传感器同步与序列采样
+  description: 由具体数据集确定 nearest/interpolation/interval、时间偏差及轨迹顺序。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: sensors
+  collapse_children: false
+  dependencies:
+  - s-units
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: advanced
+  order: 54
+  name: Advanced：稳定后扩展
+  description: 状态模型、多任务和多 DataLoader 以真实实验为触发条件，不进入基础 Engine。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  allow_rest_day_work: false
+- uid: a-multitask
+  order: 55
+  name: 共享 Backbone 多任务
+  description: 两个单任务稳定后，按缺失标签、有效样本数和固定权重实现多头训练。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: advanced
+  collapse_children: false
+  dependencies:
+  - gate-second
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: a-multiloader
+  order: 56
+  name: 多 DataLoader 调度
+  description: 按真实数据源需求实现固定比例采样与迭代器恢复；明确任务间 optimizer step。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: advanced
+  collapse_children: false
+  dependencies:
+  - a-multitask
+  labels:
+  - 按需
+  allow_rest_day_work: false
+- uid: a-trajectory
+  order: 57
+  name: 轨迹状态与评估
+  description: 状态模型接入后保证 sequence/rank 归属，验证 detach 与 ATE/RPE。
+  assignee: 未指定
+  status: 未开始
+  earliest_start: null
+  latest_finish: null
+  duration_days: 4
+  parent_uid: advanced
+  collapse_children: false
+  dependencies:
+  - t-stateful
+  - s-sync
+  labels:
+  - 按需
+  allow_rest_day_work: false

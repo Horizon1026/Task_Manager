@@ -1,6 +1,6 @@
 version: 1
 project:
-  name: 集群无人机项目
+  name: 示例项目
   start_date: 2026-03-14
   default_scale: week
   default_filter:
