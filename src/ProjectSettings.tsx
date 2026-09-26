@@ -24,6 +24,7 @@ export function ProjectSettings({ project, onChange, onClose, notify }: {
   return <div className="modal-backdrop"><section className="modal settings-modal" role="dialog" aria-modal="true" aria-label="项目设置">
     <div className="panel-heading"><h2>项目设置</h2><button aria-label="关闭项目设置" onClick={onClose}>×</button></div>
     <label>项目名称<input value={project.project.name} onChange={event => update({ name: event.target.value })} /></label>
+    <label>项目主题<select value={project.project.theme} onChange={event => update({ theme: event.target.value as Project['project']['theme'] })}><option value="light">明亮</option><option value="dark">暗色</option></select></label>
     <label>项目开始日期<input type="date" value={project.project.start_date} min="1900-01-01" max="2199-12-31" onChange={event => update({ start_date: event.target.value })} /></label>
     <label className="checkbox settings-checkbox"><input type="checkbox" checked={project.project.allow_assignee_parallel_tasks} onChange={event => update({ allow_assignee_parallel_tasks: event.target.checked })} />允许同一个执行人同时有并行任务</label>
     <p className="muted">取消勾选后，同一执行人的叶子任务将按显式依赖、最早可开始时间和任务排序依次排程，并生成不写入 dependencies 的运行时资源关系。缺省开始时间仍使用项目开始日上午；默认粒度和筛选可在甘特图工具栏设置。</p>

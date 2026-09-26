@@ -3,7 +3,7 @@
  * Change these values to tune the density of every task row.
  */
 export const GANTT_SIZING = {
-  rowHeight: 36,
+  rowHeight: 28,
   barHeight: 26,
   rowGap: 3,
   // This is visually independent from rowGap, even though their initial values match.

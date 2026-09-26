@@ -29,6 +29,15 @@ test('interactive export is one self-contained HTML document with project schedu
   assert.doesNotMatch(html, /<(?:link|script)[^>]+(?:href|src)=/);
 });
 
+test('dark export embeds the fixed dark status palette without project color settings', () => {
+  const value = project(); value.project.theme = 'dark';
+  const html = createInteractiveGanttHtml(value, { scale: 'week', filter: { labels: [], mode: 'or' } });
+  assert.match(html, /data-theme="dark"/);
+  assert.match(html, /"statusColors":/);
+  assert.match(html, /"fill":"#707070"/);
+  assert.doesNotMatch(html, /status_colors/);
+});
+
 test('interactive export filename removes forbidden path characters', () => {
   assert.equal(interactiveExportFilename(' A/B:*项目? ', new Date(2026, 8, 18)), 'A_B__项目__甘特图_2026-09-18.html');
 });

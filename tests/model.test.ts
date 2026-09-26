@@ -1,18 +1,30 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { defaultStatusColors, validateProject } from '../src/model';
+import { statuses, validateProject } from '../src/model';
+import { statusColorsByTheme } from '../src/theme';
 import { project } from './fixtures';
 
-test('status colors are YAML-configurable, validated, and defaulted for legacy projects', () => {
+test('theme palettes cover every task status and legacy YAML colors are removed', () => {
+  for (const status of statuses) {
+    assert.ok(statusColorsByTheme.light[status].fill);
+    assert.ok(statusColorsByTheme.dark[status].fill);
+    assert.notEqual(statusColorsByTheme.light[status].fill, statusColorsByTheme.dark[status].fill);
+  }
   const legacy = JSON.parse(JSON.stringify(project()));
-  delete legacy.project.status_colors;
-  assert.deepEqual(validateProject(legacy).project.status_colors, defaultStatusColors);
+  legacy.project.status_colors = { '进行中': { fill: '#123456' } };
+  assert.equal('status_colors' in validateProject(legacy).project, false);
+  legacy.project.unexpected = true;
+  assert.throws(() => validateProject(legacy), /Unrecognized key/);
+});
 
-  const configured = JSON.parse(JSON.stringify(project()));
-  configured.project.status_colors['进行中'] = { fill: '#123456', border: '#234567', text: '#345678' };
-  assert.deepEqual(validateProject(configured).project.status_colors['进行中'], configured.project.status_colors['进行中']);
-  configured.project.status_colors['进行中'].fill = 'red';
-  assert.throws(() => validateProject(configured), /#RRGGBB/);
+test('project theme defaults to light and accepts only supported YAML values', () => {
+  const legacy = JSON.parse(JSON.stringify(project()));
+  delete legacy.project.theme;
+  assert.equal(validateProject(legacy).project.theme, 'light');
+  legacy.project.theme = 'dark';
+  assert.equal(validateProject(legacy).project.theme, 'dark');
+  legacy.project.theme = 'blue';
+  assert.throws(() => validateProject(legacy), /project.theme/);
 });
 
 test('task assignees must be selected from the project assignee list', () => {

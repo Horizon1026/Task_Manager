@@ -1,0 +1,169 @@
+/* Theme control in the project header. */
+.theme-toggle{flex:none;white-space:nowrap;font-size:12px;padding:7px 10px}
+:root[data-theme='dark']{
+  color-scheme:dark;
+  color:#ededed;
+  background:#121212;
+}
+:root[data-theme='dark'] button,
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea{
+  background:#292929;
+  border-color:#494949;
+  color:#ededed;
+}
+:root[data-theme='dark'] button:hover:not(:disabled){background:#383838}
+:root[data-theme='dark'] input[readonly]{background:#242424;color:#b8b8b8}
+:root[data-theme='dark'] .primary{background:#4c4c4c;border-color:#4c4c4c;color:#fff}
+:root[data-theme='dark'] .primary:hover:not(:disabled){background:#626262}
+:root[data-theme='dark'] .app-header{background:#1b1b1b;border-color:#3c3c3c}
+:root[data-theme='dark'] .brand small,
+:root[data-theme='dark'] .app-header nav button,
+:root[data-theme='dark'] .save-state,
+:root[data-theme='dark'] .muted,
+:root[data-theme='dark'] .eyebrow,
+:root[data-theme='dark'] .stats span,
+:root[data-theme='dark'] .badge,
+:root[data-theme='dark'] .scale-switch button,
+:root[data-theme='dark'] .tag,
+:root[data-theme='dark'] .text-button,
+:root[data-theme='dark'] .gantt-caption,
+:root[data-theme='dark'] .task-heading,
+:root[data-theme='dark'] .task-heading span,
+:root[data-theme='dark'] .time-heading>div,
+:root[data-theme='dark'] .row-grip,
+:root[data-theme='dark'] .row-number,
+:root[data-theme='dark'] .task-title small,
+:root[data-theme='dark'] .board-footer,
+:root[data-theme='dark'] .app-footer,
+:root[data-theme='dark'] label,
+:root[data-theme='dark'] .field-label,
+:root[data-theme='dark'] .field-note,
+:root[data-theme='dark'] .dependency-list small,
+:root[data-theme='dark'] .hover-card p,
+:root[data-theme='dark'] .hover-card dt,
+:root[data-theme='dark'] .hover-card small,
+:root[data-theme='dark'] .calendar-week,
+:root[data-theme='dark'] .calendar-day span,
+:root[data-theme='dark'] .empty,
+:root[data-theme='dark'] .project-file-picker,
+:root[data-theme='dark'] .tree-task-cell .task-assignee,
+:root[data-theme='dark'] .search-select-caret,
+:root[data-theme='dark'] .search-select-empty{color:#b5b5b5}
+:root[data-theme='dark'] .nav-active,
+:root[data-theme='dark'] .badge.good,
+:root[data-theme='dark'] .tag.selected,
+:root[data-theme='dark'] .scale-switch button.active,
+:root[data-theme='dark'] .search-select-option[aria-selected='true']{color:#f2f2f2}
+:root[data-theme='dark'] .stats,
+:root[data-theme='dark'] .board,
+:root[data-theme='dark'] .editor,
+:root[data-theme='dark'] .hover-card,
+:root[data-theme='dark'] .modal,
+:root[data-theme='dark'] .search-select-popup{background:#202020;border-color:#404040;color:#ededed}
+:root[data-theme='dark'] .stats>div,
+:root[data-theme='dark'] .filter-toolbar,
+:root[data-theme='dark'] .gantt-scroll,
+:root[data-theme='dark'] .gantt-row,
+:root[data-theme='dark'] .tree-task-labels,
+:root[data-theme='dark'] .tree-task-labels .tree-task-cell,
+:root[data-theme='dark'] .backup-list>div,
+:root[data-theme='dark'] .assignee-settings-list,
+:root[data-theme='dark'] .assignee-settings-list>div,
+:root[data-theme='dark'] .calendar-edit{border-color:#3c3c3c}
+:root[data-theme='dark'] .badge,
+:root[data-theme='dark'] .scale-switch,
+:root[data-theme='dark'] .dependency-list>div,
+:root[data-theme='dark'] .computed{background:#2d2d2d;border-color:#4b4b4b;color:#d4d4d4}
+:root[data-theme='dark'] .scale-switch button{background:transparent;border-color:transparent}
+:root[data-theme='dark'] .scale-switch button.active,
+:root[data-theme='dark'] .tag.selected,
+:root[data-theme='dark'] .search-select-option[data-active='true']{background:#393939}
+:root[data-theme='dark'] .tag.selected{border-color:#626262}
+:root[data-theme='dark'] .gantt-header,
+:root[data-theme='dark'] .task-heading,
+:root[data-theme='dark'] .project-file-bar{background:#292929;border-color:#3c3c3c}
+:root[data-theme='dark'] .time-heading>div,
+:root[data-theme='dark'] .task-cell,
+:root[data-theme='dark'] .period-line{border-color:#3c3c3c}
+:root[data-theme='dark'] .time-background{background-image:linear-gradient(to right,#ffffff18 1px,transparent 1px)}
+:root[data-theme='dark'] .rest-column{background:#38383878}
+:root[data-theme='dark'] .task-cell,
+:root[data-theme='dark'] .tree-task-labels,
+:root[data-theme='dark'] .tree-task-labels .tree-task-cell{background:#202020}
+:root[data-theme='dark'] .selected-row .task-cell,
+:root[data-theme='dark'] .tree-task-cell.selected-row{background:#363636}
+:root[data-theme='dark'] .tree-task-labels .tree-task-cell.tree-parent-cell{background:#2c2c2c;border-color:#4b4b4b}
+:root[data-theme='dark'] .gantt-caption .gantt-zoom,
+:root[data-theme='dark'] .gantt-caption .gantt-zoom button{background:#292929;border-color:#494949;color:#d4d4d4}
+:root[data-theme='dark'] .gantt-caption .gantt-zoom button:hover:not(:disabled){background:#393939;color:#ededed}
+:root[data-theme='dark'] .gantt-caption .gantt-zoom .zoom-value{color:#f2f2f2}
+:root[data-theme='dark'] .today-line span{background:#3c3c3c;color:#f0c686}
+:root[data-theme='dark'] .legend .late-key{background:#202020}
+:root[data-theme='dark'] .notice{background:#303030;color:#e9e9e9}
+:root[data-theme='dark'] .alert{background:#303030;color:#ffc0ab}
+:root[data-theme='dark'] .calendar-warning,
+:root[data-theme='dark'] .computed.danger-box{background:#303030;color:#f0cf92}
+:root[data-theme='dark'] .calendar-warning button{background:transparent;border:0;color:#f0cf92}
+:root[data-theme='dark'] .computed strong,
+:root[data-theme='dark'] .hover-card dd{color:#dedede}
+:root[data-theme='dark'] .modal-backdrop{background:#000000b8}
+:root[data-theme='dark'] .calendar-day{background:#2a2a2a;border-color:#494949}
+:root[data-theme='dark'] .calendar-day.restday{background:#313131;color:#e9ba8c}
+:root[data-theme='dark'] .calendar-day.restday span{color:#d1af92}
+:root[data-theme='dark'] .detail-relation-handle{background:#2d2d2d;border-color:#5c5c5c;color:#e4e4e4}
+:root[data-theme='dark'] .detail-relation-handle:hover,
+:root[data-theme='dark'] .detail-relation-handle.dependency{background:#3a3a3a;color:#f1f1f1}
+:root[data-theme='dark'] .detail-relation-handle.parent{background:#303030;border-color:#777777;color:#dedede}
+:root[data-theme='dark'] .detail-relation-handle .relation-grip,
+:root[data-theme='dark'] .panel-heading .panel-add-task{background:#2e2e2e;border-color:#5c5c5c;color:#e4e4e4}
+:root[data-theme='dark'] .dependency-focus-mode .gantt-caption{background:#303030;color:#e8e8e8}
+:root[data-theme='dark'] .search-select-popup{box-shadow:0 8px 28px #0008}
+@media(max-width:760px){.theme-toggle{margin-left:auto}}
+@media(max-width:1200px){
+  .app-header{height:auto;min-height:84px;flex-wrap:wrap;padding:12px 20px;gap:12px}
+  .save-area{margin-left:auto}
+  .app-header nav{order:3;width:100%;justify-content:center}
+  .nav-active:after{bottom:-12px}
+}
+@media(max-width:760px){
+  .app-header{padding:15px}
+  .app-header nav{justify-content:space-around}
+  .save-area{flex-wrap:wrap;justify-content:flex-end}
+}
+:root[data-theme='dark'] .badge.warning{color:#e5c37a}
+:root[data-theme='dark'] .panel-heading .panel-add-task:hover:not(:disabled){background:#393939}
+@media(max-width:760px){
+  .save-area{width:100%}
+  .header-actions{flex-wrap:wrap;justify-content:flex-end;white-space:normal}
+}
+:root[data-theme='dark'] .brand-icon,
+:root[data-theme='dark'] .drag-hint{background:#4c4c4c;color:#fff}
+:root[data-theme='dark'] .nav-active:after{background:#dedede}
+:root[data-theme='dark'] .task-list-resize-handle:hover,
+:root[data-theme='dark'] .task-list-resize-handle:active{background:#77777755}
+/* Keep text-only controls transparent so row outlines and the header stay visible. */
+:root[data-theme='dark'] .app-header nav button,
+:root[data-theme='dark'] .tree-task-cell .task-title,
+:root[data-theme='dark'] .row-order button,
+:root[data-theme='dark'] .text-button,
+:root[data-theme='dark'] .panel-heading > button,
+:root[data-theme='dark'] .notice button,
+:root[data-theme='dark'] .dependency-list button{background:transparent}
+:root[data-theme='dark'] .app-header nav button:hover:not(:disabled),
+:root[data-theme='dark'] .tree-task-cell .task-title:hover:not(:disabled),
+:root[data-theme='dark'] .row-order button:hover:not(:disabled),
+:root[data-theme='dark'] .text-button:hover:not(:disabled),
+:root[data-theme='dark'] .panel-heading > button:hover:not(:disabled),
+:root[data-theme='dark'] .notice button:hover:not(:disabled),
+:root[data-theme='dark'] .dependency-list button:hover:not(:disabled){background:transparent;color:#fff}
+
+/* Dependency lines stay crisp in light mode and stand out on dark tracks. */
+:root[data-theme='dark'] .tree-gantt-body .dependency-layer{color:#82e6ff}
+:root[data-theme='dark'] .tree-gantt-body .dependency-layer .dependency-arrow,
+:root[data-theme='dark'] .tree-gantt-body .dependency-layer .dependency-arrowhead,
+:root[data-theme='dark'] .tree-gantt-body .dependency-layer .assignee-dependency{
+  stroke:#82e6ff;
+  filter:drop-shadow(0 0 1px #82e6ff99);
+}

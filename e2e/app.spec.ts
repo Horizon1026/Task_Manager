@@ -32,6 +32,38 @@ test('groups navigation and project actions into two horizontal header rows', as
   const actionCenters = await actions.getByRole('button').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return box.top + box.height / 2; }));
   expect(Math.max(...actionCenters) - Math.min(...actionCenters)).toBeLessThan(2);
 });
+test('edits the project theme in settings and persists it to YAML', async ({ page, request }) => {
+  const root = page.locator('html');
+  await expect(root).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('button', { name: '项目设置', exact: true }).click();
+  const themeSelect = page.getByLabel('项目主题');
+  await expect(themeSelect).toHaveValue('light');
+  await themeSelect.selectOption('dark');
+  await expect(root).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('.settings-modal')).toHaveCSS('background-color', 'rgb(32, 32, 32)');
+  await expect(page.locator('.board')).toHaveCSS('background-color', 'rgb(32, 32, 32)');
+  await expect(page.getByRole('button', { name: '项目设置', exact: true })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(page.locator('.tree-task-cell .task-title').first()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  const taskColor = await page.getByTestId('bar-task-discovery').evaluate(node => getComputedStyle(node).backgroundColor);
+  const channels = taskColor.match(/\d+/g)!.map(Number);
+  expect(Math.max(...channels) - Math.min(...channels)).toBeGreaterThan(70);
+  await page.getByRole('button', { name: '关闭项目设置' }).click();
+  await page.getByRole('button', { name: '项目设置', exact: true }).hover();
+  await expect(page.getByRole('button', { name: '项目设置', exact: true })).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await page.locator('.tree-task-cell .task-title').first().hover();
+  await expect(page.locator('.tree-task-cell .task-title').first()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(page.getByTestId('save-state')).toContainText('未保存修改');
+  await page.getByRole('button', { name: '保存并备份', exact: false }).click();
+  await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
+  const data = await (await request.get('/api/project')).json();
+  expect(parse(await readFile(data.file, 'utf8')).project.theme).toBe('dark');
+  await page.reload();
+  await expect(root).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('button', { name: '切换到明亮主题' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: '切换到明亮主题' }).click();
+  await expect(root).toHaveAttribute('data-theme', 'light');
+  await expect(page.getByTestId('save-state')).toContainText('未保存修改');
+});
 test('loads seven scales, colors, muted filtering and read-only UID', async ({ page }) => {
   await expect(page.locator('.task-bar')).toHaveCount(6);
   await expect(page.getByTestId('bar-task-engine')).toHaveCSS('border-color', 'rgb(211, 112, 97)');
@@ -58,6 +90,20 @@ test('loads seven scales, colors, muted filtering and read-only UID', async ({ p
   await expect(page.locator('.dependency-arrowhead-halo')).toHaveCount(0);
   expect(await page.locator('.dependency-arrow').first().evaluate(node => getComputedStyle(node).filter)).not.toBe('none');
   await expect(page.locator('.dependency-layer')).toHaveCSS('z-index', '20');
+});
+test('dependency arrows have compact light glow and high-contrast dark strokes', async ({ page }) => {
+  await page.getByTestId('bar-task-engine').click();
+  const path = page.locator('.dependency-arrow').first();
+  const arrow = page.locator('.dependency-arrowhead').first();
+  await expect(path).toHaveCount(1);
+  const lightFilter = await path.evaluate(node => getComputedStyle(node).filter);
+  expect(lightFilter).toContain('0px 0px 1px');
+  expect(lightFilter).toContain('0px 0px 2px');
+  expect(lightFilter).not.toContain('0px 0px 5px');
+  await page.getByRole('button', { name: '切换到暗色主题' }).click();
+  await expect(path).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await expect(arrow).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await expect(page.locator('.dependency-layer')).toHaveCSS('color', 'rgb(130, 230, 255)');
 });
 test('expands the workspace and timeline to a wide browser viewport', async ({ page }) => {
   await page.setViewportSize({ width: 2200, height: 1000 });
@@ -328,7 +374,7 @@ test('local server rejects cross-origin writes', async ({ request }) => {
 });
 
 test('project settings configure start date, assignees and assignee serialization', async ({ page, request }) => {
-  await page.getByRole('button', { name: '项目设置' }).click();
+  await page.getByRole('button', { name: '项目设置', exact: true }).click();
   await page.getByLabel('项目开始日期').fill('2026-09-15');
   const parallelTasks = page.getByLabel('允许同一个执行人同时有并行任务');
   await expect(parallelTasks).toBeChecked();

@@ -22,8 +22,7 @@ if errorlevel 1 (
 if not exist node_modules (
   call "%~dp0create_dependence.cmd"
   if errorlevel 1 exit /b 1
-)
-if not exist dist\index.html (
+) else (
   call npm.cmd run build
   if errorlevel 1 exit /b 1
 )

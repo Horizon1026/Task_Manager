@@ -22,6 +22,16 @@ test('save persists edited data and creates identical saved snapshot plus origin
   await store.restore(original, saved.revision);
   assert.equal((await store.read()).project.tasks[0].name, 'a'); assert.equal((await store.list()).length, 3);
 });
+test('saving a legacy project removes obsolete status colors from YAML', async t => {
+  const store = await setup(t);
+  const current = project();
+  const legacy = { ...current, project: { ...current.project, status_colors: { '未开始': { fill: '#e5e7eb' } } } };
+  await writeFile(store.file, stringify(legacy));
+  const base = await store.read();
+  assert.equal('status_colors' in base.project.project, false);
+  await store.save(base.project, base.revision);
+  assert.doesNotMatch(await readFile(store.file, 'utf8'), /status_colors/);
+});
 test('external modifications prevent stale save and preserve file', async t => {
   const store = await setup(t), base = await store.read();
   const other = project(); other.project.name = '外部修改'; await writeFile(store.file, stringify(other));

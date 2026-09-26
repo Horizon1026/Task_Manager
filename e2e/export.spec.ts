@@ -25,6 +25,9 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
   await expect(page.locator('.bar')).toHaveCount(6);
   await expect(page.locator('.edge')).toHaveCount(6);
+  await expect(page.locator('.edge').first()).toHaveCSS('stroke', 'rgb(106, 153, 137)');
+  await expect(page.locator('.edge').first()).toHaveCSS('opacity', '0.16');
+  await expect(page.locator('#arrow path')).toHaveCSS('stroke', 'rgb(0, 125, 112)');
   const scroll = page.locator('#scroll');
   const zoomBar = page.locator('.bar[data-uid="task-design"]');
   const zoomWidth = (await zoomBar.boundingBox())!.width;
@@ -53,6 +56,7 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   const normalArrowWidth = await page.locator('.edge').first().evaluate(group => getComputedStyle(group.querySelector('.edge-arrowhead')!).strokeWidth);
   await page.locator('.bar[data-uid="task-design"]').hover();
   await expect(page.locator('.edge.related')).toHaveCount(2);
+  await expect(page.locator('.edge.related').first()).toHaveCSS('opacity', '1');
   await expect.poll(() => page.locator('.edge.related').first().evaluate(group => getComputedStyle(group.querySelector('.edge-arrowhead')!).strokeWidth)).toBe(normalArrowWidth);
   await expect(page.locator('.bar')).toHaveCount(6);
   await expect(page.locator('.bar[data-uid="task-release"]')).not.toHaveClass(/dim/);
@@ -78,6 +82,24 @@ test('exports one offline HTML file whose tasks and dependencies remain interact
   await expect(page.locator('.bar')).toHaveCount(6);
   await page.getByRole('button', { name: '月', exact: true }).click();
   await expect(page.getByRole('button', { name: '月', exact: true })).toHaveClass(/active/);
+});
+
+test('dark offline export uses the dark dependency line and arrow colors', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: '切换到暗色主题' }).click();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出交互式 HTML' }).click();
+  const output = testInfo.outputPath('dark-interactive-gantt.html');
+  await (await pending).saveAs(output);
+  await page.goto(pathToFileURL(output).href);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const edge = page.locator('.edge').first();
+  await expect(edge).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await expect(edge).toHaveCSS('opacity', '0.16');
+  await expect(edge.locator('.edge-arrowhead')).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await expect(page.locator('#arrow path')).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await page.locator('.bar[data-uid="task-design"]').hover();
+  await expect(page.locator('.edge.related').first()).toHaveCSS('stroke', 'rgb(130, 230, 255)');
+  await expect(page.locator('.edge.related').first()).toHaveCSS('opacity', '1');
 });
 
 test('exported parent tasks ignore clicks while their collapse control remains available', async ({ page, request }, testInfo) => {

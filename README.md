@@ -23,7 +23,7 @@ cd /home/horizon/Desktop/code_space/Task_Manager
 bash run.sh
 ```
 
-脚本优先使用系统 Node.js，当前机器没有系统 Node.js 时使用项目 `.runtime/` 中的独立环境，不修改系统安装。
+脚本优先使用系统 Node.js，当前机器没有系统 Node.js 时使用项目 `.runtime/` 中的独立环境，不修改系统安装。`run.sh` / `run.cmd` 每次启动前都会重新构建源码；修改 `src/ganttSizing.ts` 等前端文件后，重启脚本并刷新浏览器。开发时可使用 `npm run dev` 自动更新页面。
 
 依赖管理脚本：
 
@@ -80,18 +80,9 @@ npm start
 
 本地日历从 `holiday-cn` 获取年度中国大陆全国统一放假、调休数据。断网时使用 YAML 中已保存的年度快照；未加载的年份按普通周末暂估并显示提示。手动修正优先于联网数据，并与任务一起保存。
 
-任务块状态色可在 YAML 的 `project.status_colors` 中配置；每种状态需要 `fill`（填充色）、`border`（边框色）和 `text`（文字色），均为 `#RRGGBB`：
+项目主题可以在“项目设置”中选择，或在 YAML 的 `project.theme` 中配置为 `light`（明亮）或 `dark`（暗色）。顶部主题按钮也会修改当前项目的主题；点击“保存并备份”后写入 YAML。旧项目未配置时默认使用明亮主题。
 
-```yaml
-project:
-  status_colors:
-    未开始: { fill: "#dfe9e2", border: "#c8d8cb", text: "#647c69" }
-    进行中: { fill: "#bce0d5", border: "#92c7b7", text: "#2a7361" }
-    验收中: { fill: "#e5ddf4", border: "#d0bfe7", text: "#8264a3" }
-    已完成: { fill: "#d4e3f5", border: "#b9cfe9", text: "#567ba2" }
-```
-
-缺少该字段的旧项目会自动使用上述默认颜色。
+任务块的四种状态色在 `src/theme.ts` 中按明亮、暗色主题分别定义，项目 YAML 不再需要 `status_colors`。旧文件中的该字段仍可读取，保存时会移除。
 
 执行人由项目级名单限定；在任务详情中只能从下拉框选择：
 

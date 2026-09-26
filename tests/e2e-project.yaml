@@ -3,6 +3,7 @@ project:
   name: TaskManager 示例项目
   start_date: 2026-09-14
   default_scale: week
+  theme: light
   default_filter:
     labels: []
     mode: or

@@ -3,29 +3,13 @@ project:
   name: 新建项目
   start_date: 2026-09-14
   default_scale: week
+  theme: light
   default_filter:
     labels: []
     mode: or
   allow_assignee_parallel_tasks: true
   assignees:
     - 未指定
-  status_colors:
-    未开始:
-      fill: "#e5e7eb"
-      border: "#cbd5e1"
-      text: "#64748b"
-    进行中:
-      fill: "#dbeafe"
-      border: "#93c5fd"
-      text: "#1d4ed8"
-    验收中:
-      fill: "#ffedd5"
-      border: "#fdba74"
-      text: "#c2410c"
-    已完成:
-      fill: "#dcfce7"
-      border: "#86efac"
-      text: "#15803d"
 calendar:
   years: []
   overrides: []
