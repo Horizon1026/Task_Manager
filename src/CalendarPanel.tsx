@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { CalendarYear, Project } from './model';
-import { dayNumber, dateString, makeCalendar } from './schedule';
+import { dayNumber, dateString, makeCalendar } from './dateCalendar';
 import { api } from './api';
 import { SearchableSelect } from './SearchableSelect';
 

@@ -170,3 +170,25 @@ test('exported HTML includes generated assignee dependencies without persisting 
   await expect(page.locator('#details')).toContainText('半天排期引擎（自动串行）');
   expect(data.project.tasks.find((task: { uid: string }) => task.uid === 'task-release').dependencies).toEqual(['task-qa']);
 });
+
+
+test('offline rest-day shading follows project calendar overrides', async ({ page, request }, testInfo) => {
+  const data = await (await request.get('/api/project')).json();
+  data.project.calendar.overrides = [
+    { date: '2026-09-14', is_workday: false, note: '周一休息' },
+    { date: '2026-09-19', is_workday: true, note: '周六补班' },
+  ];
+  await writeFile(data.file, stringify(data.project));
+  await page.reload();
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出交互式 HTML' }).click();
+  const output = testInfo.outputPath('calendar-overrides.html');
+  await (await pending).saveAs(output);
+  await page.goto(pathToFileURL(output).href);
+  const firstDay = (await page.locator('#range').textContent())!.split(' — ')[0];
+  const origin = Date.parse(`${firstDay}T00:00:00Z`);
+  const leftFor = (date: string) => `${((Date.parse(`${date}T00:00:00Z`) - origin) / 86400000) * 22}px`;
+  const restPositions = await page.locator('.rest').evaluateAll(nodes => nodes.map(node => (node as HTMLElement).style.left));
+  expect(restPositions).toContain(leftFor('2026-09-14'));
+  expect(restPositions).not.toContain(leftFor('2026-09-19'));
+});

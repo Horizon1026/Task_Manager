@@ -3,7 +3,7 @@ project:
   name: 视觉感知训练框架开发计划
   start_date: '2026-09-28'
   default_scale: week
-  theme: light
+  theme: dark
   default_filter:
     labels: []
     mode: or

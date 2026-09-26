@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { descendantUids, statuses, type HalfDay, type Project, type Task } from './model';
-import { formatSlot, type Scheduled } from './schedule';
+import { formatSlot } from './dateCalendar';
+import type { Scheduled } from './schedule';
 import { SearchableSelect } from './SearchableSelect';
 import type { RelationDragController } from './useRelationDrag';
 import type { EffectiveDependencyEdge } from './effectiveDependencies';

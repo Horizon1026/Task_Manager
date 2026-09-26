@@ -1,10 +1,12 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { type Project, type Scale, type Task } from './model';
-import { dayNumber, dateString, durationBetween, fromSlot, makeCalendar, nextWorkSlot, type Scheduled, todayLocal } from './schedule';
-import { alignStart, pixelsPerDay, timeColumns } from './timeline';
-import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from './ganttLayout';
+import { dayNumber, dateString, durationBetween, fromSlot, makeCalendar, nextWorkSlot, todayLocal } from './dateCalendar';
+import type { Scheduled } from './schedule';
+import { alignStart, timeColumns } from './timeline';
+import { dependencyFocus, displayDependencyEdges, ganttTreeLayout, visibleTaskUids } from './ganttLayout';
 import { GANTT_BAR_TOP, GANTT_PARENT_INSET, GANTT_PARENT_MIN_HEIGHT, GANTT_SIZING } from './ganttSizing';
-import { GANTT_ZOOM_LEVELS, normalizeGanttZoom } from './ganttZoom';
+import { GANTT_ZOOM_LEVELS } from './ganttZoom';
+import { useGanttViewport } from './useGanttViewport';
 import type { RelationDragController } from './useRelationDrag';
 import { GanttDependencyLayer } from './GanttDependencyLayer';
 import { GanttHoverCard } from './GanttHoverCard';
@@ -17,18 +19,8 @@ import './ganttOverrides.css';
 type Drag = { uid: string; mode: 'move' | 'start' | 'end'; x: number; y: number; dx: number; dy: number; moved: boolean };
 type Props = { project: Project; schedule: Map<string, Scheduled>; dependencyEdges: EffectiveDependencyEdge[]; scale: Scale; selected: string | null; filter: { labels: string[]; mode: 'and' | 'or' }; focusUid: string | null; canFocus: boolean; onFocusChange: (uid: string | null) => void; onSelect: (uid: string | null) => void; onChange: (task: Task) => void; onOrder: (uid: string, order: number) => void; onSiblingOrder: (uid: string, targetUid: string) => void; onToggleCollapse: (uid: string) => void; relation: RelationDragController; notify: (message: string) => void };
 export function Gantt({ project, schedule, dependencyEdges, scale, selected, filter, focusUid, canFocus, onFocusChange, onSelect, onChange, onOrder, onSiblingOrder, onToggleCollapse, relation, notify }: Props) {
-  const allTasks = [...project.tasks].sort((a, b) => a.order - b.order);
-  const matches = (task: Task) => !filter.labels.length || (filter.mode === 'and' ? filter.labels.every(label => task.labels.includes(label)) : filter.labels.some(label => task.labels.includes(label)));
-  const filteredUids = useMemo(() => {
-    if (!filter.labels.length) return new Set(allTasks.map(task => task.uid));
-    const result = new Set(allTasks.filter(matches).map(task => task.uid));
-    const parents = new Map(allTasks.map(task => [task.uid, task.parent_uid]));
-    for (const task of allTasks.filter(matches)) {
-      let parent = task.parent_uid;
-      while (parent !== null) { result.add(parent); parent = parents.get(parent) ?? null; }
-    }
-    return result;
-  }, [allTasks, filter]);
+  const allTasks = useMemo(() => [...project.tasks].sort((a, b) => a.order - b.order), [project.tasks]);
+  const filteredUids = useMemo(() => visibleTaskUids(project, filter), [project, filter.labels, filter.mode]);
   const focus = useMemo(() => focusUid ? dependencyFocus(project, focusUid, dependencyEdges) : null, [project, focusUid, dependencyEdges]);
   const visibleUids = focus?.visibleUids ?? filteredUids;
   const tasks = allTasks.filter(task => visibleUids.has(task.uid));
@@ -39,36 +31,20 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
     ? { ...project, tasks: project.tasks.map(task => task.uid === focusUid ? { ...task, collapse_children: true } : task) }
     : project, [project, focusUid, focus]);
   const displayedDependencyEdges = useMemo(() => displayDependencyEdges(dependencyProject, displayedUids, dependencyEdges), [dependencyProject, displayedUids, dependencyEdges]);
-  const [taskListWidth, setTaskListWidth] = useState(260);
-  const [viewportWidth, setViewportWidth] = useState(1360);
-  const [zoom, setZoom] = useState<number>(1);
-  const ppd = pixelsPerDay[scale] * zoom, pps = ppd / 2, calendar = useMemo(() => makeCalendar(project), [project]);
   const origin = alignStart(Math.min(dayNumber(project.project.start_date) - 2, ...[...schedule.values()].map(value => Math.floor(value.start / 2) - 2)), scale);
+  const skipClick = useRef(false);
+  const { taskListWidth, viewportWidth, zoom, scrollLeft, scroll, ppd, pps, zoomIndex,
+    changeZoom, beginListResize, resizeList, finishListResize,
+    beginPan, beginParentPan, beginFocusPan, pan, finishPan, onScroll } = useGanttViewport({ scale, origin, focusUid, onSelect, skipClick });
+  const calendar = useMemo(() => makeCalendar(project), [project]);
   const timelineViewportWidth = Math.max(1100, viewportWidth - taskListWidth);
   const end = Math.max(origin + Math.ceil(timelineViewportWidth / ppd), ...[...schedule.values()].map(value => Math.ceil(value.end / 2) + 10));
   const width = Math.ceil((end - origin) * ppd), columns = timeColumns(origin, end, scale), height = Math.max(240, layout.height);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hover, setHover] = useState<{ uid: string; x: number; y: number } | null>(null);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const dragRef = useRef<Drag | null>(null), resizeRef = useRef<{ x: number; width: number } | null>(null), panRef = useRef<{ x: number; scrollLeft: number; moved: boolean } | null>(null), focusPositionRef = useRef<{ scrollLeft: number; windowX: number; windowY: number } | null>(null), zoomAnchorRef = useRef<number | null>(null), skipClick = useRef(false), scroll = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<Drag | null>(null), focusPositionRef = useRef<{ scrollLeft: number; windowX: number; windowY: number } | null>(null);
   const hoverRef = useRef(hover), focusRef = useRef(focusUid), canFocusRef = useRef(canFocus), relationRef = useRef(relation.drag);
   hoverRef.current = hover; focusRef.current = focusUid; canFocusRef.current = canFocus; relationRef.current = relation.drag;
-  useEffect(() => {
-    const node = scroll.current;
-    if (!node || typeof ResizeObserver === 'undefined') return;
-    const update = () => setViewportWidth(node.clientWidth);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-  useLayoutEffect(() => {
-    const node = scroll.current, anchorSlot = zoomAnchorRef.current;
-    if (!node || anchorSlot === null) return;
-    zoomAnchorRef.current = null;
-    const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
-    node.scrollLeft = Math.max(0, (anchorSlot - origin * 2) * pps - visibleTimelineWidth / 2);
-  }, [zoom, origin, pps, taskListWidth]);
   useEffect(() => {
     const releaseFocus = () => {
       if (!focusRef.current) return;
@@ -98,17 +74,6 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   useEffect(() => { if (focusUid && !canFocus) onFocusChange(null); }, [focusUid, canFocus, onFocusChange]);
   const x = (slot: number) => (slot - origin * 2) * pps;
   const isParent = (task: Task) => project.tasks.some(value => value.parent_uid === task.uid);
-  function changeZoom(next: number) {
-    const target = normalizeGanttZoom(next);
-    if (target === zoom) return;
-    const node = scroll.current;
-    if (node) {
-      const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
-      zoomAnchorRef.current = origin * 2 + (node.scrollLeft + visibleTimelineWidth / 2) / pps;
-    }
-    setZoom(target);
-  }
-  const zoomIndex = Math.max(0, GANTT_ZOOM_LEVELS.indexOf(zoom as typeof GANTT_ZOOM_LEVELS[number]));
   function begin(e: ReactPointerEvent<HTMLElement>, task: Task, mode: Drag['mode']) {
     if (focusUid) return;
     if (e.button !== 0 && e.button !== 2) return;
@@ -132,51 +97,10 @@ export function Gantt({ project, schedule, dependencyEdges, scale, selected, fil
   }
   function cancelSchedule() { dragRef.current = null; setDrag(null); skipClick.current = true; }
   function cancel() { cancelSchedule(); relation.cancel(); }
-  function beginListResize(e: ReactPointerEvent<HTMLSpanElement>) {
-    if (focusUid) return;
-    e.preventDefault();
-    resizeRef.current = { x: e.clientX, width: taskListWidth };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-  function resizeList(e: ReactPointerEvent<HTMLSpanElement>) {
-    const start = resizeRef.current;
-    if (start) setTaskListWidth(Math.max(190, Math.min(520, start.width + e.clientX - start.x)));
-  }
-  function finishListResize(e: ReactPointerEvent<HTMLSpanElement>) {
-    resizeRef.current = null;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
-  }
-  function beginPan(e: ReactPointerEvent<HTMLDivElement>) {
-    const target = e.target as HTMLElement, taskTarget = target.closest<HTMLElement>('[data-task-uid]');
-    if (e.button !== 0 || target.closest('button, .task-list-resize-handle, .tree-task-labels') || (taskTarget && !taskTarget.classList.contains('parent-task-bar'))) return;
-    panRef.current = { x: e.clientX, scrollLeft: e.currentTarget.scrollLeft, moved: false };
-    onSelect(null); e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault();
-  }
-  function beginParentPan(e: ReactPointerEvent<HTMLElement>) {
-    if (e.button !== 0 || !scroll.current) return;
-    panRef.current = { x: e.clientX, scrollLeft: scroll.current.scrollLeft, moved: false };
-    onSelect(null); scroll.current.setPointerCapture(e.pointerId); e.stopPropagation(); e.preventDefault();
-  }
-  function beginFocusPan(e: ReactPointerEvent<HTMLElement>) {
-    if (e.button !== 0 || !scroll.current) return;
-    panRef.current = { x: e.clientX, scrollLeft: scroll.current.scrollLeft, moved: false };
-    scroll.current.setPointerCapture(e.pointerId); e.stopPropagation(); e.preventDefault();
-  }
-  function pan(e: ReactPointerEvent<HTMLDivElement>) {
-    const start = panRef.current;
-    if (start && scroll.current) {
-      if (Math.abs(e.clientX - start.x) > 4) { start.moved = true; skipClick.current = true; }
-      scroll.current.scrollLeft = start.scrollLeft - (e.clientX - start.x);
-    }
-  }
-  function finishPan(e: ReactPointerEvent<HTMLDivElement>) {
-    panRef.current = null;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
-  }
   const hoverTask = hover ? tasks.find(task => task.uid === hover.uid) : undefined;
   return <div className={`gantt-section ${focusUid ? 'dependency-focus-mode' : ''}`} style={{ '--gantt-parent-label-top': `${GANTT_SIZING.parentLabelTop}px` } as CSSProperties}>
     <div className="gantt-caption"><span>{dateString(origin)} — {dateString(end - 1)}</span><span>{focusUid ? `正在查看「${project.tasks.find(task => task.uid === focusUid)?.name}」的直接依赖 · 只读 · 松开 M 恢复` : '右键拖动设置依赖 · R + 右键拖动设置父任务 · 悬浮按住 M 聚焦'}</span><div className="gantt-caption-actions"><div className="gantt-zoom" role="group" aria-label="甘特图水平缩放"><button type="button" aria-label="缩小甘特图" title="缩小时间轴" disabled={zoomIndex <= 0} onClick={() => changeZoom(GANTT_ZOOM_LEVELS[zoomIndex - 1])}>−</button><button type="button" className="zoom-value" aria-label="重置甘特图缩放" title="恢复 100%" disabled={zoom === 1} onClick={() => changeZoom(1)}>{Math.round(zoom * 100)}%</button><button type="button" aria-label="放大甘特图" title="放大时间轴，让半天任务更宽" disabled={zoomIndex >= GANTT_ZOOM_LEVELS.length - 1} onClick={() => changeZoom(GANTT_ZOOM_LEVELS[zoomIndex + 1])}>＋</button></div><button disabled={!!focusUid} onClick={() => { if (scroll.current) scroll.current.scrollLeft = Math.max(0, (dayNumber(todayLocal()) - origin) * ppd - 100); }}>定位今天</button></div></div>
-    <div className="gantt-scroll" ref={scroll} onPointerDown={beginPan} onPointerMove={pan} onPointerUp={finishPan} onPointerCancel={finishPan} onScroll={e => setScrollLeft(e.currentTarget.scrollLeft)} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
+    <div className="gantt-scroll" ref={scroll} onPointerDown={beginPan} onPointerMove={pan} onPointerUp={finishPan} onPointerCancel={finishPan} onScroll={onScroll} onKeyDown={e => { if (e.key === 'Escape') cancel(); }} tabIndex={0}><div className="gantt-canvas" style={{ width: width + taskListWidth }}>
       <div className="gantt-header"><div className="task-heading" style={{ width: taskListWidth, minWidth: taskListWidth }}>任务 / 执行人<span>{tasks.length} 条</span><span role="separator" aria-label="调整任务列表宽度" aria-orientation="vertical" className="task-list-resize-handle" onPointerDown={beginListResize} onPointerMove={resizeList} onPointerUp={finishListResize} onPointerCancel={finishListResize} /></div><div className="time-heading" style={{ width }}>{columns.map(column => <div key={column.start} style={{ left: (column.start - origin) * ppd, width: (column.end - column.start) * ppd }}>{column.label}{scale === 'day' && <small>上午　下午</small>}</div>)}</div></div>
       <div className="gantt-body tree-gantt-body" style={{ minHeight: height }}>
         <div className="time-background" style={{ left: taskListWidth, width, backgroundSize: `${ppd}px 100%` }}>{ppd >= 3 && end - origin <= 5000 && Array.from({ length: Math.ceil(end - origin) }, (_, index) => !calendar(dateString(origin + index)).isWorkday && <div className="rest-column" key={index} style={{ left: index * ppd, width: ppd }} />)}{columns.map(column => <div className="period-line" key={column.start} style={{ left: (column.start - origin) * ppd }} />)}<div className="today-line" style={{ left: (dayNumber(todayLocal()) - origin) * ppd }}><span>今天</span></div></div>

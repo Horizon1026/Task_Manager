@@ -1,4 +1,4 @@
-import { dayNumber, dateString } from './schedule';
+import { dayNumber, dateString } from './dateCalendar';
 import type { Scale } from './model';
 export const pixelsPerDay: Record<Scale, number> = { day: 72, week: 22, 'half-month': 12, month: 7, quarter: 2.6, 'half-year': 1.4, year: 0.75 };
 export function timeColumns(startDay: number, endDay: number, scale: Scale) {

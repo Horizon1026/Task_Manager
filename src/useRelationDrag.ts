@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Project, Task } from './model';
-import { setTaskParent } from './schedule';
+import { setTaskParent } from './taskTree';
 
 export type RelationDrag = { uid: string; mode: 'dependency' | 'parent'; x: number; y: number; dx: number; dy: number; moved: boolean; target?: string };
 export type RelationDragController = {

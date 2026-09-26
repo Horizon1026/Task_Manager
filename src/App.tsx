@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { api, type Snapshot } from './api';
-import { scaleNames, scales, statuses, validateProject, type Project, type Scale, type Task, type TaskDefaults } from './model';
-import { moveSiblingTask, moveTask, setTaskParent, scheduleProjectPlan } from './schedule';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { api } from './api';
+import { useProjectSession } from './useProjectSession';
+import { scaleNames, scales, statuses, type Project, type Scale, type Task, type TaskDefaults } from './model';
+import { scheduleProjectPlan } from './schedule';
+import { moveSiblingTask, moveTask } from './taskTree';
+import { addTaskDependency, createTask, deleteTask, reparentTask, replaceTask, toggleTaskCollapse } from './taskCommands';
 import { Gantt } from './Gantt';
 import { TaskEditor } from './TaskEditor';
 import { CalendarPanel } from './CalendarPanel';
@@ -12,44 +15,19 @@ import { ProjectSettings } from './ProjectSettings';
 import { setTheme, statusColorsByTheme } from './theme';
 
 export function App() {
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null), [project, setProject] = useState<Project | null>(null);
   const [selected, setSelected] = useState<string | null>(null), [scale, setScale] = useState<Scale>('week');
   const [focusUid, setFocusUid] = useState<string | null>(null);
   const [filter, setFilter] = useState<Project['project']['default_filter']>({ labels: [], mode: 'or' });
-  const [projectFiles, setProjectFiles] = useState<string[]>([]);
-  const [message, setMessage] = useState(''), [fileError, setFileError] = useState(''), [conflict, setConflict] = useState(false);
-  const [saving, setSaving] = useState(false), [modal, setModal] = useState<'calendar' | 'settings' | 'backups' | null>(null);
-  const [backups, setBackups] = useState<string[]>([]);
+  const [message, setMessage] = useState(''), [modal, setModal] = useState<'calendar' | 'settings' | 'backups' | null>(null);
+  const { snapshot, project, setProject, projectFiles, backups, dirty, saving, conflict, fileError, save,
+    reload: reloadProject, openBackups: loadBackups, selectProjectFile: loadProjectFile, restore: restoreBackup } = useProjectSession({
+    focusUid,
+    notify: setMessage,
+    onAccept: (value, initial) => { if (initial) { setScale(value.project.project.default_scale); setFilter(value.project.project.default_filter); } },
+    onExternalRefresh: () => { setModal(null); setMessage('已加载外部修改的 YAML。'); },
+  });
   const theme = project?.project.theme ?? 'light';
   useLayoutEffect(() => { setTheme(theme); }, [theme]);
-  const dirty = !!snapshot && !!project && JSON.stringify(snapshot.project) !== JSON.stringify(project);
-  const live = useRef({ snapshot, project, dirty, saving, focusUid }); live.current = { snapshot, project, dirty, saving, focusUid };
-  const accept = useCallback((value: Snapshot, initial = false) => {
-    setSnapshot(value); setProject(value.project); setConflict(false); setFileError('');
-    if (initial) { setScale(value.project.project.default_scale); setFilter(value.project.project.default_filter); }
-  }, []);
-  useEffect(() => {
-    let cancelled = false, running = false;
-    async function poll() {
-      if (running || live.current.saving) return;
-      running = true;
-      const requestRevision = live.current.snapshot?.revision;
-      try {
-        const value = await api<Snapshot>('project');
-        if (cancelled || live.current.saving || live.current.snapshot?.revision !== requestRevision) return;
-        setFileError('');
-        if (!live.current.snapshot) accept(value, true);
-        else if (value.revision !== live.current.snapshot.revision) {
-          if (live.current.dirty) setConflict(true);
-          else { accept(value); setModal(null); setMessage('已加载外部修改的 YAML。'); }
-        } else setConflict(false);
-      } catch (e) { if (!cancelled) setFileError((e as Error).message); }
-      finally { running = false; }
-    }
-    void poll(); const timer = setInterval(poll, 1200);
-    return () => { cancelled = true; clearInterval(timer); };
-  }, [accept]);
-  useEffect(() => { void api<{ projects: string[] }>('projects').then(data => setProjectFiles(data.projects)).catch(() => undefined); }, []);
   const calculated = useMemo(() => {
     try {
       if (!project) return { schedule: new Map(), dependencies: [], error: '' };
@@ -57,33 +35,10 @@ export function App() {
       return { schedule: plan.schedule, dependencies: plan.dependencyEdges, error: '' };
     } catch (error) { return { schedule: new Map(), dependencies: [], error: (error as Error).message }; }
   }, [project]);
-  const save = useCallback(async () => {
-    const current = live.current;
-    if (!current.project || !current.snapshot || current.saving || current.focusUid) return;
-    setSaving(true); live.current.saving = true;
-    try {
-      validateProject(current.project);
-      const result = await api<Snapshot>('save', { project: current.project, revision: current.snapshot.revision });
-      accept(result); setMessage(result.warning || `已保存并备份 · ${result.backup}`);
-    } catch (error) { setMessage((error as Error).message); }
-    finally { setSaving(false); live.current.saving = false; }
-  }, [accept]);
-  useEffect(() => {
-    const key = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey)) return;
-      if (event.key.toLowerCase() !== 's') return;
-      event.preventDefault();
-      if (live.current.focusUid) return;
-      (document.activeElement as HTMLElement)?.blur(); setTimeout(() => void save(), 0);
-    };
-    const unload = (event: BeforeUnloadEvent) => { if (live.current.dirty) { event.preventDefault(); event.returnValue = ''; } };
-    window.addEventListener('keydown', key); window.addEventListener('beforeunload', unload);
-    return () => { window.removeEventListener('keydown', key); window.removeEventListener('beforeunload', unload); };
-  }, [save]);
   useEffect(() => {
     if (focusUid && (selected !== null || modal !== null || !project?.tasks.some(task => task.uid === focusUid))) setFocusUid(null);
   }, [focusUid, selected, modal, project]);
-  function updateTask(task: Task) { setProject(p => p && { ...p, tasks: p.tasks.map(t => t.uid === task.uid ? task : t) }); }
+  function updateTask(task: Task) { setProject(p => p && replaceTask(p, task)); }
   function reorder(uid: string, order: number) { setProject(p => p && moveTask(p, uid, order)); }
   function reorderSibling(uid: string, targetUid: string) {
     setProject(p => {
@@ -92,74 +47,47 @@ export function App() {
       catch (error) { setMessage((error as Error).message); return p; }
     });
   }
-  function updateParent(uid: string, parent_uid: string | null) {
+  function updateParent(uid: string, parentUid: string | null) {
     if (!project) return;
-    try {
-      const parent = project.tasks.find(task => task.uid === parent_uid);
-      const firstChild = parent !== undefined && !project.tasks.some(task => task.parent_uid === parent_uid);
-      const migratesPrerequisites = firstChild && parent.dependencies.length > 0;
-      const migratesDependents = firstChild && project.tasks.some(task => task.dependencies.includes(parent_uid!));
-      const next = setTaskParent(project, uid, parent_uid);
-      setProject(next);
-      const migrated = migratesPrerequisites && migratesDependents ? '原父任务的前置依赖已迁移到此任务，被依赖关系也已同步迁移。'
-        : migratesPrerequisites ? '原父任务的前置依赖已迁移到此任务。'
-          : migratesDependents ? '原父任务的被依赖关系已迁移到此任务。' : '';
-      setMessage(parent_uid === null ? '已设为根任务。请保存并备份。' : `父任务已更新，父任务排期将自动汇总。${migrated}请保存并备份。`);
-    } catch (error) { setMessage((error as Error).message); }
+    try { const next = reparentTask(project, uid, parentUid); setProject(next.project); setMessage(next.message); }
+    catch (error) { setMessage((error as Error).message); }
   }
   function addDependency(from: string, to: string) {
     if (!project) return;
-    try {
-      if (from === to) throw new Error('不能把任务自身设为前置任务。');
-      if (project.tasks.find(t => t.uid === to)?.dependencies.includes(from)) throw new Error('该依赖已存在。');
-      const next = { ...project, tasks: project.tasks.map(t => t.uid === to ? { ...t, dependencies: [...t.dependencies, from] } : t) };
-      validateProject(next); setProject(next); setMessage('依赖已添加，后续排期已更新。请保存并备份。');
-    } catch (e) { setMessage((e as Error).message); }
+    try { setProject(addTaskDependency(project, from, to)); setMessage('依赖已添加，后续排期已更新。请保存并备份。'); }
+    catch (error) { setMessage((error as Error).message); }
   }
   const relation = useRelationDrag(project, addDependency, (uid, parentUid) => updateParent(uid, parentUid), setMessage);
   function toggleCollapse(uid: string) {
     if (!project?.tasks.some(task => task.parent_uid === uid)) return;
-    setProject(current => current && { ...current, tasks: current.tasks.map(task => task.uid === uid ? { ...task, collapse_children: !task.collapse_children } : task) });
+    setProject(current => current && toggleTaskCollapse(current, uid));
     setSelected(uid); setMessage('子任务折叠状态已更新。请保存并备份。');
   }
   async function addTask() {
     if (!project || focusUid) return;
     try {
       const defaults = await api<TaskDefaults>('task-defaults');
-      const assignee = defaults.assignee ?? project.project.assignees[0] ?? '未指定';
-      if (defaults.assignee && !project.project.assignees.includes(defaults.assignee)) throw new Error(`默认任务模板的执行人不在当前项目名单中：${defaults.assignee}`);
-      const task: Task = { uid: crypto.randomUUID(), order: project.tasks.length + 1, ...defaults, assignee, parent_uid: null, dependencies: [] };
-      const assignees = project.project.assignees.length ? project.project.assignees : [assignee];
-      setProject({ ...project, project: { ...project.project, assignees }, tasks: [...project.tasks, task] }); setSelected(task.uid);
+      const next = createTask(project, defaults, crypto.randomUUID());
+      setProject(next.project); setSelected(next.task.uid);
     } catch (error) { setMessage(`无法新建任务：${(error as Error).message}`); }
   }
   function removeTask() {
     if (!project || !selected) return;
-    const dependents = project.tasks.filter(t => t.dependencies.includes(selected));
-    const children = project.tasks.filter(t => t.parent_uid === selected);
-    if (children.length) return setMessage(`不能删除：${children.map(t => t.name).join('、')} 仍是其子任务。请先将子任务设为根任务或重新指定父任务。`);
-    if (dependents.length) return setMessage(`不能删除：${dependents.map(t => t.name).join('、')} 仍依赖此任务。请先解除依赖。`);
-    if (!confirm('删除此任务？修改将在保存并备份后写入文件。')) return;
-    setProject({ ...project, tasks: project.tasks.filter(t => t.uid !== selected).sort((a, b) => a.order - b.order).map((t, i) => ({ ...t, order: i + 1 })) }); setSelected(null);
+    try {
+      const next = deleteTask(project, selected);
+      if (!confirm('删除此任务？修改将在保存并备份后写入文件。')) return;
+      setProject(next); setSelected(null);
+    } catch (error) { setMessage((error as Error).message); }
   }
   async function reload() {
-    if (dirty && !confirm('重新加载会丢弃当前未保存的修改。是否继续？')) return;
-    try { accept(await api<Snapshot>('project'), true); setModal(null); setMessage('已重新加载文件。'); } catch (e) { setMessage((e as Error).message); }
+    if (await reloadProject()) { setModal(null); setMessage('已重新加载文件。'); }
   }
-  async function openBackups() {
-    try { const data = await api<{ backups: string[] }>('backups'); setBackups(data.backups); setModal('backups'); } catch (e) { setMessage((e as Error).message); }
-  }
+  async function openBackups() { if (await loadBackups()) setModal('backups'); }
   async function selectProjectFile(name: string) {
-    if (!snapshot || name === snapshot.file.split('/').pop()) return;
-    if (dirty && !confirm('切换项目会丢弃当前未保存的修改。是否继续？')) return;
-    try { const value = await api<Snapshot>('projects/select', { name }); accept(value, true); setSelected(null); setModal(null); setMessage(`已加载项目：${name}`); }
-    catch (e) { setMessage((e as Error).message); }
+    if (await loadProjectFile(name)) { setSelected(null); setModal(null); setMessage(`已加载项目：${name}`); }
   }
   async function restore(name: string) {
-    if (!snapshot || !confirm(`${dirty ? '当前未保存修改将被丢弃。' : ''}恢复选中的备份？恢复前会自动备份当前磁盘文件。`)) return;
-    setSaving(true); live.current.saving = true;
-    try { const value = await api<Snapshot>('restore', { name, revision: snapshot.revision }); accept(value, true); setModal(null); setSelected(null); setMessage('已恢复备份；恢复前的文件也已备份。'); }
-    catch (e) { setMessage((e as Error).message); } finally { setSaving(false); live.current.saving = false; }
+    if (await restoreBackup(name)) { setModal(null); setSelected(null); setMessage('已恢复备份；恢复前的文件也已备份。'); }
   }
   function exportInteractiveGantt() {
     if (!project || calculated.error) return;

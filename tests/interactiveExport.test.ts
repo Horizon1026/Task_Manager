@@ -21,8 +21,8 @@ test('interactive export is one self-contained HTML document with project schedu
   assert.match(html, /dependencies/);
   assert.match(html, /"kind":"assignee"/);
   assert.match(html, /<line class="edge-arrowhead"[^>]+marker-end="url\(#arrow\)"/);
-  assert.match(html, /ganttTreeLayout=function ganttTreeLayout/);
-  assert.match(html, /ZOOM_LEVELS=\[0\.5,0\.75,1,1\.25,1\.5,2,2\.5,3,4\]/);
+  assert.match(html, /id="task-manager-data"/);
+  assert.match(html, /id="zoom-in"/);
   assert.match(html, /"start":/);
   assert.match(html, /包含未保存草稿/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);

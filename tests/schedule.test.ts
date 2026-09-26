@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProject } from '../src/model';
-import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, moveSiblingTask, moveTask, normalizeTreeOrder, scheduleProject, scheduleProjectPlan, setTaskParent, toSlot } from '../src/schedule';
+import { dayNumber, durationBetween, formatSlot, fromSlot, makeCalendar, toSlot } from '../src/dateCalendar';
+import { moveSiblingTask, moveTask, normalizeTreeOrder, setTaskParent } from '../src/taskTree';
+import { scheduleProject, scheduleProjectPlan } from '../src/schedule';
 import { alignStart, timeColumns } from '../src/timeline';
 import { project, task } from './fixtures';
 

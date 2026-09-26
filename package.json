@@ -8,7 +8,13 @@
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/index.ts",
     "test": "tsx --test tests/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "viewer:build": "tsx scripts-build-viewer.ts",
+    "prebuild": "npm run viewer:build",
+    "pretest": "npm run viewer:build",
+    "predev": "npm run viewer:build",
+    "prestart": "npm run viewer:build",
+    "pretest:e2e": "npm run build"
   },
   "dependencies": {
     "pinyin-match": "1.2.10",
@@ -25,6 +31,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "tsx": "^4.19.0",
     "typescript": "~5.8.3",
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "esbuild": "^0.28.2"
   }
 }

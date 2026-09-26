@@ -8,6 +8,28 @@ export type DisplayDependencyEdge = { from: string; to: string; kind: Dependency
 export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>; memberUids: Set<string> };
 export type GanttLayoutSizing = { rowHeight: number; rowStride: number; rowGap: number };
 
+/** Keep matching tasks and their ancestors so filtered trees retain context. */
+export function visibleTaskUids(project: Pick<Project, 'tasks'>, filter: { labels: string[]; mode: 'and' | 'or' }, query = ''): Set<string> {
+  const needle = query.trim().toLowerCase();
+  const byUid = new Map(project.tasks.map(task => [task.uid, task]));
+  const visible = new Set<string>();
+  for (const task of project.tasks) {
+    const labelsMatch = !filter.labels.length || (filter.mode === 'and'
+      ? filter.labels.every(label => task.labels.includes(label))
+      : filter.labels.some(label => task.labels.includes(label)));
+    const queryMatch = !needle || [task.name, task.uid, task.assignee, task.description, String(task.order)]
+      .some(value => String(value).toLowerCase().includes(needle));
+    if (!labelsMatch || !queryMatch) continue;
+    visible.add(task.uid);
+    let parent = task.parent_uid;
+    while (parent !== null) {
+      visible.add(parent);
+      parent = byUid.get(parent)?.parent_uid ?? null;
+    }
+  }
+  return visible;
+}
+
 /** Assigns a vertical rectangle to every task; parent rectangles enclose descendants. */
 export function ganttTreeLayout(project: Project, visibleUids: ReadonlySet<string> = new Set(project.tasks.map(task => task.uid)), sizing: GanttLayoutSizing = GANTT_LAYOUT_SIZING): GanttTreeLayout {
   const children = new Map<string | null, Task[]>();

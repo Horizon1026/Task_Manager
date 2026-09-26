@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dependencyFocus, displayDependencyEdges, ganttTreeLayout } from '../src/ganttLayout';
+import { dependencyFocus, displayDependencyEdges, ganttTreeLayout, visibleTaskUids } from '../src/ganttLayout';
 import { project, task } from './fixtures';
 import { scheduleProjectPlan } from '../src/schedule';
 import { GANTT_SIZING } from '../src/ganttSizing';
@@ -75,4 +75,16 @@ test('dependency display and focus include generated assignee edges', () => {
     { from: 'a', to: 'b', kind: 'assignee' },
   ]);
   assert.deepEqual([...dependencyFocus(p, 'a', edges).coreUids], ['a', 'b']);
+});
+
+
+test('shared task visibility preserves ancestors for label filters and export search', () => {
+  const value = project([
+    task('parent', { name: '父任务' }),
+    task('child', { parent_uid: 'parent', name: '视觉设计', labels: ['设计'] }),
+    task('other', { name: '开发实现', labels: ['开发'] }),
+  ]);
+  assert.deepEqual([...visibleTaskUids(value, { labels: ['设计'], mode: 'or' })].sort(), ['child', 'parent']);
+  assert.deepEqual([...visibleTaskUids(value, { labels: [], mode: 'or' }, '视觉')].sort(), ['child', 'parent']);
+  assert.deepEqual([...visibleTaskUids(value, { labels: ['开发'], mode: 'and' }, '视觉')], []);
 });

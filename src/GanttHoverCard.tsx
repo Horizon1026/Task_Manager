@@ -1,5 +1,6 @@
 import type { Project, Task } from './model';
-import { formatMoment, formatSlot, type Scheduled } from './schedule';
+import { formatMoment, formatSlot } from './dateCalendar';
+import type { Scheduled } from './schedule';
 import type { EffectiveDependencyEdge } from './effectiveDependencies';
 
 export function GanttHoverCard({ task, scheduled, project, dependencyEdges, x, y }: { task: Task; scheduled: Scheduled; project: Project; dependencyEdges: EffectiveDependencyEdge[]; x: number; y: number }) {
