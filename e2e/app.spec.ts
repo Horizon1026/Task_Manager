@@ -404,3 +404,16 @@ test('project settings configure start date, assignees and assignee serializatio
   expect(saved.project.assignees).toContain('新成员');
   expect(saved.tasks.find((task: { uid: string }) => task.uid === 'task-release').dependencies).toEqual(['task-qa']);
 });
+
+
+test('today marker tracks the local minute without reloading', async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 8, 16, 12, 34, 0) });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
+  await page.getByRole('button', { name: '天', exact: true }).click();
+  const marker = page.locator('.today-line');
+  const before = Number.parseFloat((await marker.getAttribute('style'))!.match(/left:\s*([\d.-]+)px/)![1]);
+  await page.clock.runFor(60_100);
+  await expect.poll(async () => Number.parseFloat((await marker.getAttribute('style'))!.match(/left:\s*([\d.-]+)px/)![1]))
+    .toBeCloseTo(before + 72 / 1440, 3);
+});

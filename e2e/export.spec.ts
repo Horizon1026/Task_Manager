@@ -192,3 +192,19 @@ test('offline rest-day shading follows project calendar overrides', async ({ pag
   expect(restPositions).toContain(leftFor('2026-09-14'));
   expect(restPositions).not.toContain(leftFor('2026-09-19'));
 });
+
+
+test('offline today marker keeps moving across midnight', async ({ page }, testInfo) => {
+  await page.clock.install({ time: new Date(2026, 8, 16, 23, 59, 0) });
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出交互式 HTML' }).click();
+  const output = testInfo.outputPath('live-today.html');
+  await (await pending).saveAs(output);
+  await page.goto(pathToFileURL(output).href);
+  await page.getByRole('button', { name: '天', exact: true }).click();
+  const marker = page.locator('#grid .today');
+  const before = Number.parseFloat((await marker.getAttribute('style'))!.match(/left:\s*([\d.-]+)px/)![1]);
+  await page.clock.runFor(60_100);
+  await expect.poll(async () => Number.parseFloat((await marker.getAttribute('style'))!.match(/left:\s*([\d.-]+)px/)![1]))
+    .toBeCloseTo(before + 72 / 1440, 3);
+});

@@ -7,7 +7,11 @@ export const toSlot = (m: HalfDay) => dayNumber(m.date) * 2 + (m.period === 'pm'
 export const fromSlot = (slot: number): HalfDay => ({ date: dateString(Math.floor(slot / 2)), period: slot % 2 === 0 ? 'am' : 'pm' });
 export const formatSlot = (slot: number) => { const m = fromSlot(slot); return `${m.date} ${m.period === 'am' ? '上午' : '下午'}`; };
 export const formatMoment = (m: HalfDay | null) => m ? `${m.date} ${m.period === 'am' ? '上午' : '下午'}` : '未设置';
-export const todayLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+export const todayLocal = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+/** Local wall-clock position on a day-based timeline, rounded down to the current minute. */
+export const localMinuteDay = (date = new Date()) => dayNumber(todayLocal(date)) + (date.getHours() * 60 + date.getMinutes()) / 1440;
+/** Reschedule after each wall-clock minute boundary so long-running views stay current. */
+export const millisecondsUntilNextMinute = (now = Date.now()) => 60_000 - now % 60_000 + 10;
 
 export function makeCalendar(project: Project) {
   const days = new Map<string, { isOffDay: boolean; name: string }>();

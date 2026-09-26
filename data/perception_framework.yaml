@@ -1,7 +1,7 @@
 version: 1
 project:
   name: 视觉感知训练框架开发计划
-  start_date: '2026-09-28'
+  start_date: '2026-09-27'
   default_scale: week
   theme: dark
   default_filter:

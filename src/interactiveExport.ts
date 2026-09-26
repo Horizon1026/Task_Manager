@@ -39,7 +39,6 @@ export function createInteractiveGanttHtml(project: Project, options: Interactiv
     view: { scale: options.scale, filter: options.filter },
     labels: [...new Set(project.tasks.flatMap(task => task.labels))].sort(),
     draft: !!options.draft,
-    today: `${exportedAt.getFullYear()}-${String(exportedAt.getMonth() + 1).padStart(2, '0')}-${String(exportedAt.getDate()).padStart(2, '0')}`,
     exportedAt: exportedAt.toISOString(),
   };
   const scaleButtons = scales.map((scale, index) => `<button type="button" data-scale="${scale}">${scaleNames[index]}</button>`).join('');
