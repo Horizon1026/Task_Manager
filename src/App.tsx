@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { api } from './api';
+import { projectForPreview } from './taskPreview';
 import { useProjectSession } from './useProjectSession';
 import { scaleNames, scales, statuses, type Project, type Scale, type Task, type TaskDefaults } from './model';
 import { scheduleProjectPlan } from './schedule';
@@ -16,6 +17,7 @@ import { setTheme, statusColorsByTheme } from './theme';
 
 export function App() {
   const [selected, setSelected] = useState<string | null>(null), [scale, setScale] = useState<Scale>('week');
+  const [taskDefaults, setTaskDefaults] = useState<TaskDefaults | null>(null);
   const [focusUid, setFocusUid] = useState<string | null>(null);
   const [filter, setFilter] = useState<Project['project']['default_filter']>({ labels: [], mode: 'or' });
   const [message, setMessage] = useState(''), [modal, setModal] = useState<'calendar' | 'settings' | 'backups' | null>(null);
@@ -26,12 +28,19 @@ export function App() {
     onAccept: (value, initial) => { if (initial) { setScale(value.project.project.default_scale); setFilter(value.project.project.default_filter); } },
     onExternalRefresh: () => { setModal(null); setMessage('已加载外部修改的 YAML。'); },
   });
+  useEffect(() => {
+    let cancelled = false;
+    void api<TaskDefaults>('task-defaults').then(value => {
+      if (!cancelled) setTaskDefaults(value);
+    }).catch(error => { if (!cancelled) setMessage(`无法读取默认任务模板：${(error as Error).message}`); });
+    return () => { cancelled = true; };
+  }, [selected, snapshot?.file]);
   const theme = project?.project.theme ?? 'light';
   useLayoutEffect(() => { setTheme(theme); }, [theme]);
   const calculated = useMemo(() => {
     try {
       if (!project) return { schedule: new Map(), dependencies: [], error: '' };
-      const plan = scheduleProjectPlan(project);
+      const plan = scheduleProjectPlan(projectForPreview(project));
       return { schedule: plan.schedule, dependencies: plan.dependencyEdges, error: '' };
     } catch (error) { return { schedule: new Map(), dependencies: [], error: (error as Error).message }; }
   }, [project]);
@@ -67,6 +76,7 @@ export function App() {
     if (!project || focusUid) return;
     try {
       const defaults = await api<TaskDefaults>('task-defaults');
+      setTaskDefaults(defaults);
       const next = createTask(project, defaults, crypto.randomUUID());
       setProject(next.project); setSelected(next.task.uid);
     } catch (error) { setMessage(`无法新建任务：${(error as Error).message}`); }
@@ -98,6 +108,8 @@ export function App() {
   }
   if (!project) return <div className="loading"><span className="brand-icon">T</span><h1>TaskManager</h1><p>{fileError || '正在读取项目 YAML…'}</p><p className="muted">启动文件无效时，修复 YAML 后会自动重试。</p></div>;
   const allLabels = [...new Set([...project.tasks.flatMap(t => t.labels), ...filter.labels])].sort();
+  const assignees = filter.assignees ?? [];
+  const allAssignees = [...new Set([...project.project.assignees, ...project.tasks.map(task => task.assignee), ...assignees])].sort();
   const task = project.tasks.find(t => t.uid === selected);
   const late = [...calculated.schedule.values()].filter(s => s.late).length;
   const unknown = [...new Set([...calculated.schedule.values()].flatMap(s => s.unknownYears))].sort();
@@ -132,11 +144,12 @@ export function App() {
         <section className="board">
           <div className="project-file-bar"><label className="project-file-picker">项目文件<SearchableSelect label="选择项目文件" disabled={saving || !!focusUid || !projectFiles.length} value={snapshot?.file.split('/').pop() || ''} onChange={name => void selectProjectFile(name)} options={projectFiles.map(name => ({ value: name, label: name }))} /></label></div>
           <div className="board-toolbar"><div className="view-title"><h2>任务甘特图</h2><span className="badge">{project.tasks.length} TASKS</span></div><div className="scale-switch" aria-label="时间轴粒度">{scales.map((s, i) => <button disabled={!!focusUid} key={s} className={scale === s ? 'active' : ''} onClick={() => setScale(s)}>{scaleNames[i]}</button>)}</div></div>
-          <div className="filter-toolbar"><span className="muted small">标签筛选</span><button disabled={!!focusUid} className={`tag ${!filter.labels.length ? 'selected' : ''}`} onClick={() => setFilter({ ...filter, labels: [] })}>全部</button>{allLabels.map(label => <button disabled={!!focusUid} className={`tag ${filter.labels.includes(label) ? 'selected' : ''}`} key={label} onClick={() => setFilter({ ...filter, labels: filter.labels.includes(label) ? filter.labels.filter(l => l !== label) : [...filter.labels, label] })}>{label}</button>)}<SearchableSelect label="标签匹配模式" disabled={!!focusUid} value={filter.mode} onChange={value => setFilter({ ...filter, mode: value as 'and' | 'or' })} options={[{ value: 'or', label: '任一匹配 OR' }, { value: 'and', label: '全部匹配 AND' }]} /><button disabled={!!focusUid} className="text-button default-view" onClick={() => { setProject({ ...project, project: { ...project.project, default_scale: scale, default_filter: filter } }); setMessage('当前粒度和筛选已设为项目默认值，等待保存。'); }}>设为默认视图</button></div>
-          <Gantt project={project} schedule={calculated.schedule} dependencyEdges={calculated.dependencies} scale={scale} selected={selected} filter={filter} focusUid={focusUid} canFocus={selected === null && modal === null} onFocusChange={setFocusUid} onSelect={setSelected} onChange={updateTask} onOrder={reorder} onSiblingOrder={reorderSibling} onToggleCollapse={toggleCollapse} relation={relation} notify={setMessage} />
-          <div className="board-footer"><div className="legend">{statuses.map(s => { const color = statusColorsByTheme[theme][s]; return <span key={s}><i style={{ backgroundColor: color.fill, borderColor: color.border }} />{s}</span>; })}<span><i className="late-key" />超期</span>{!project.project.allow_assignee_parallel_tasks && <span><i className="assignee-dependency-key" />同执行人串行</span>}</div><span>{focusUid ? '依赖聚焦模式 · 只读 · 松开 M 恢复' : '筛选时仅显示匹配任务及其父节点 · 悬浮任务按住 M 查看直接依赖'}</span></div>
+          <div className="filter-toolbar" role="group" aria-label="标签筛选"><SearchableSelect label="标签匹配模式" disabled={!!focusUid} value={filter.mode} onChange={value => setFilter({ ...filter, mode: value as 'and' | 'or' })} options={[{ value: 'or', label: '任一匹配 OR' }, { value: 'and', label: '全部匹配 AND' }]} /><span className="muted small">标签筛选</span><button disabled={!!focusUid} className={`tag ${!filter.labels.length ? 'selected' : ''}`} onClick={() => setFilter({ ...filter, labels: [] })}>全部</button>{allLabels.map(label => <button disabled={!!focusUid} className={`tag ${filter.labels.includes(label) ? 'selected' : ''}`} key={label} onClick={() => setFilter({ ...filter, labels: filter.labels.includes(label) ? filter.labels.filter(l => l !== label) : [...filter.labels, label] })}>{label}</button>)}<button disabled={!!focusUid} className="text-button default-view" onClick={() => { setProject({ ...project, project: { ...project.project, default_scale: scale, default_filter: filter } }); setMessage('当前粒度和筛选已设为项目默认值，等待保存。'); }}>设为默认视图</button></div>
+          <div className="filter-toolbar" role="group" aria-label="执行人筛选"><SearchableSelect label="执行人匹配模式" disabled={!!focusUid} value={filter.assignee_mode ?? 'or'} onChange={value => setFilter({ ...filter, assignee_mode: value as 'and' | 'or' })} options={[{ value: 'or', label: '任一匹配 OR' }, { value: 'and', label: '全部匹配 AND' }]} /><span className="muted small">执行人筛选</span><button disabled={!!focusUid} className={`tag ${!assignees.length ? 'selected' : ''}`} onClick={() => setFilter({ ...filter, assignees: [] })}>全部</button>{allAssignees.map(assignee => <button disabled={!!focusUid} className={`tag ${assignees.includes(assignee) ? 'selected' : ''}`} key={assignee} onClick={() => setFilter({ ...filter, assignees: assignees.includes(assignee) ? assignees.filter(value => value !== assignee) : [...assignees, assignee] })}>{assignee}</button>)}</div>
+          <Gantt key={snapshot?.file} project={project} schedule={calculated.schedule} dependencyEdges={calculated.dependencies} scale={scale} selected={selected} filter={filter} focusUid={focusUid} canFocus={selected === null && modal === null} onFocusChange={setFocusUid} onSelect={setSelected} onChange={updateTask} onOrder={reorder} onSiblingOrder={reorderSibling} onToggleCollapse={toggleCollapse} relation={relation} notify={setMessage} />
+          <div className="board-footer"><div className="legend">{statuses.map(s => { const color = statusColorsByTheme[theme][s]; return <span key={s}><i style={{ backgroundColor: color.fill, borderColor: color.border }} />{s}</span>; })}<span><i className="late-key" />超期</span><span><i className="parallel-key" />同执行人任务并行</span>{!project.project.allow_assignee_parallel_tasks && <span><i className="assignee-dependency-key" />同执行人串行</span>}</div><span>{focusUid ? '依赖聚焦模式 · 只读 · 松开 M 恢复' : '筛选时仅显示匹配任务及其父节点 · 悬浮任务按住 M 查看直接依赖'}</span></div>
         </section>
-        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} project={project} scheduled={calculated.schedule.get(task.uid)} dependencyEdges={calculated.dependencies} relation={relation} onChange={updateTask} onParentChange={parent_uid => updateParent(task.uid, parent_uid)} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onAdd={addTask} onDelete={removeTask} onClose={() => setSelected(null)} />}
+        {task && <TaskEditor key={`${task.uid}:${snapshot?.revision}`} task={task} defaultDuration={taskDefaults?.duration_days} project={project} scheduled={calculated.schedule.get(task.uid)} dependencyEdges={calculated.dependencies} relation={relation} onChange={updateTask} onParentChange={parent_uid => updateParent(task.uid, parent_uid)} onOrder={order => reorder(task.uid, order)} onDependency={addDependency} onAdd={addTask} onDelete={removeTask} onClose={() => setSelected(null)} />}
       </fieldset>
       <footer className="app-footer"><span className="mono" title={snapshot?.file}>{snapshot?.file}</span><span>本地优先 · YAML 数据源 · v0.1</span></footer>
     </main>

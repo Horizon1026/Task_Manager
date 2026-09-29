@@ -9,7 +9,7 @@ export type DependencyFocus = { coreUids: Set<string>; visibleUids: Set<string>;
 export type GanttLayoutSizing = { rowHeight: number; rowStride: number; rowGap: number };
 
 /** Keep matching tasks and their ancestors so filtered trees retain context. */
-export function visibleTaskUids(project: Pick<Project, 'tasks'>, filter: { labels: string[]; mode: 'and' | 'or' }, query = ''): Set<string> {
+export function visibleTaskUids(project: Pick<Project, 'tasks'>, filter: Project['project']['default_filter'], query = ''): Set<string> {
   const needle = query.trim().toLowerCase();
   const byUid = new Map(project.tasks.map(task => [task.uid, task]));
   const visible = new Set<string>();
@@ -19,7 +19,10 @@ export function visibleTaskUids(project: Pick<Project, 'tasks'>, filter: { label
       : filter.labels.some(label => task.labels.includes(label)));
     const queryMatch = !needle || [task.name, task.uid, task.assignee, task.description, String(task.order)]
       .some(value => String(value).toLowerCase().includes(needle));
-    if (!labelsMatch || !queryMatch) continue;
+    const assigneeMatch = !filter.assignees?.length || (filter.assignee_mode === 'and'
+      ? filter.assignees.every(assignee => task.assignee === assignee)
+      : filter.assignees.includes(task.assignee));
+    if (!labelsMatch || !queryMatch || !assigneeMatch) continue;
     visible.add(task.uid);
     let parent = task.parent_uid;
     while (parent !== null) {

@@ -1,3 +1,4 @@
+import { taskDisplayName } from './taskPreview';
 import type { GanttTreeItem } from './ganttLayout';
 import { GANTT_BAR_TOP, GANTT_SIZING } from './ganttSizing';
 
@@ -20,7 +21,7 @@ export function GanttTaskLabel({ item, isParent, listWidth, selected, dimmed, lo
     <span className="tree-branch">{isParent ? task.collapse_children ? '▸' : '▾' : item.depth ? '└' : ''}</span>
     <span className="row-grip" draggable={!locked} onDragStart={e => { if (locked) return e.preventDefault(); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/mission-uid', task.uid); }}>⠿</span>
     <span className="row-number" title={task.uid}>{task.uid}</span>
-    <button className="task-title" disabled={locked} title={isParent ? '双击折叠或展开子任务' : undefined} onClick={() => { if (!locked) onSelect(task.uid); }}><strong>{task.name}</strong>{!isParent && <span className="task-assignee">{task.assignee || '未指定执行人'}</span>}</button>
-    <div className="row-order"><button aria-label={`上移 ${task.name}`} disabled={locked || task.order === 1} onClick={() => onOrder(task.uid, task.order - 1)}>↑</button><button aria-label={`下移 ${task.name}`} disabled={locked || task.order === total} onClick={() => onOrder(task.uid, task.order + 1)}>↓</button></div>
+    <button className="task-title" disabled={locked} title={isParent ? '双击折叠或展开子任务' : undefined} onClick={() => { if (!locked) onSelect(task.uid); }}><strong>{taskDisplayName(task)}</strong>{!isParent && <span className="task-assignee">{task.assignee || '未指定执行人'}</span>}</button>
+    <div className="row-order"><button aria-label={`上移 ${taskDisplayName(task)}`} disabled={locked || task.order === 1} onClick={() => onOrder(task.uid, task.order - 1)}>↑</button><button aria-label={`下移 ${taskDisplayName(task)}`} disabled={locked || task.order === total} onClick={() => onOrder(task.uid, task.order + 1)}>↓</button></div>
   </div>;
 }

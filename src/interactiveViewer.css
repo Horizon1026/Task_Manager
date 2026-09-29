@@ -29,3 +29,9 @@ html[data-theme="dark"] .edge.related{opacity:1}
 html[data-theme="dark"] .edge.dim{opacity:.05}
 html[data-theme="dark"] .caption,html[data-theme="dark"] .footer,html[data-theme="dark"] .axis-cell{border-color:#3c3c3c;color:#b5b5b5}
 @media print{header,.toolbar,.caption,.details,.footer{display:none!important}main{padding:0}.shell{border:0;box-shadow:none}.scroll{max-height:none;overflow:visible}.head{position:relative}}
+
+.details.hover-preview{z-index:100;right:auto;width:min(420px,calc(100vw - 16px));max-height:calc(100vh - 16px);overscroll-behavior:contain}.details h2{overflow-wrap:anywhere}
+
+.details.hover-preview{pointer-events:none}.details.hover-preview.scrollable{pointer-events:auto}
+
+.hover-card-content{display:flow-root}

@@ -10,6 +10,7 @@
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "viewer:build": "tsx scripts-build-viewer.ts",
+    "viewer:check": "tsx scripts-build-viewer.ts --check",
     "prebuild": "npm run viewer:build",
     "pretest": "npm run viewer:build",
     "predev": "npm run viewer:build",

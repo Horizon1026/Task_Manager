@@ -41,7 +41,7 @@ export const projectSchema = z.object({
     name: z.string().trim().min(1).max(200), start_date: date,
     default_scale: z.enum(scales),
     theme: z.enum(['light', 'dark']).default('light'),
-    default_filter: z.object({ labels: z.array(z.string()), mode: z.enum(['and', 'or']) }).strict(),
+    default_filter: z.object({ labels: z.array(z.string()), mode: z.enum(['and', 'or']), assignees: z.array(z.string()).optional(), assignee_mode: z.enum(['and', 'or']).optional() }).strict(),
     allow_assignee_parallel_tasks: z.boolean().default(true),
     assignees: z.array(z.string().trim().min(1).max(200)).max(1000).default([]),
     // Accepted only for old YAML and backups; the palette now belongs to the theme.

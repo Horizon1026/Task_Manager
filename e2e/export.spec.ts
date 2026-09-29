@@ -123,7 +123,13 @@ test('exported parent tasks ignore clicks while their collapse control remains a
 
   const parent = page.locator('.bar.parent[data-uid="task-discovery"]');
   await expect(parent).toBeVisible();
+  await page.locator('.bar[data-uid="task-design"]').hover();
+  await expect(page.locator('#hover-preview')).toBeVisible();
+  await parent.hover({ position: { x: 5, y: 5 } });
+  await expect(page.locator('#hover-preview')).toBeHidden();
   const parentLabel = page.locator('.label.parent[data-uid="task-discovery"]');
+  await parentLabel.hover();
+  await expect(page.locator('#hover-preview')).toBeHidden();
   const childLabel = page.locator('.label[data-uid="task-design"]');
   const parentLabelBox = (await parentLabel.boundingBox())!;
   const childLabelBox = (await childLabel.boundingBox())!;

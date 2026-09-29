@@ -16,7 +16,7 @@ export default defineConfig({
         let pending = Promise.resolve();
         server.watcher.on('change', file => {
           if (!file.startsWith(sourceDir) || file === generatedViewer || !/\.(ts|css)$/.test(file)) return;
-          pending = pending.then(buildViewer).catch(error => server.config.logger.error(String(error)));
+          pending = pending.then(() => buildViewer()).catch(error => server.config.logger.error(String(error)));
         });
       },
     },

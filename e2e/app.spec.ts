@@ -77,7 +77,7 @@ test('loads seven scales, colors, muted filtering and read-only UID', async ({ p
   for (const name of ['天', '周', '半月', '月', '季度', '半年', '年']) { await page.getByRole('button', { name, exact: true }).click(); await expect(page.locator('.task-bar')).toHaveCount(6); }
   await page.getByRole('button', { name: '核心', exact: true }).click();
   await expect(page.locator('.gantt-row')).toHaveCount(1); await expect(page.locator('.task-bar')).toHaveCount(1);
-  await page.getByRole('button', { name: '全部', exact: true }).click();
+  await page.getByRole('group', { name: '标签筛选', exact: true }).getByRole('button', { name: '全部', exact: true }).click();
   await expect(page.locator('.task-bar')).toHaveCount(6);
   await taskDetails(page, '半天排期引擎');
   await expect(page.getByLabel('任务 UID')).toHaveAttribute('readonly', '');

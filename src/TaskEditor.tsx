@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { descendantUids, statuses, type HalfDay, type Project, type Task } from './model';
 import { formatSlot } from './dateCalendar';
 import type { Scheduled } from './schedule';
+import { durationFromInput } from './taskPreview';
 import { SearchableSelect } from './SearchableSelect';
 import type { RelationDragController } from './useRelationDrag';
 import type { EffectiveDependencyEdge } from './effectiveDependencies';
@@ -9,14 +10,19 @@ import type { EffectiveDependencyEdge } from './effectiveDependencies';
 function MomentInput({ title, value, onChange }: { title: string; value: HalfDay | null; onChange: (v: HalfDay | null) => void }) {
   return <label>{title}<div className="inline"><input aria-label={title} type="date" min="1900-01-01" max="2199-12-31" value={value?.date || ''} onChange={e => onChange(e.target.value ? { date: e.target.value, period: value?.period || 'am' } : null)} /><SearchableSelect label={`${title}时段`} value={value?.period || 'am'} disabled={!value} onChange={period => value && onChange({ ...value, period: period as 'am' | 'pm' })} options={[{ value: 'am', label: '上午' }, { value: 'pm', label: '下午' }]} /></div></label>;
 }
-export function TaskEditor({ task, project, scheduled, dependencyEdges, relation, onChange, onParentChange, onOrder, onDependency, onAdd, onDelete, onClose }: {
-  task: Task; project: Project; scheduled?: Scheduled;
+export function TaskEditor({ task, defaultDuration, project, scheduled, dependencyEdges, relation, onChange, onParentChange, onOrder, onDependency, onAdd, onDelete, onClose }: {
+  task: Task; defaultDuration?: number; project: Project; scheduled?: Scheduled;
   dependencyEdges: EffectiveDependencyEdge[];
   relation: RelationDragController;
   onChange: (task: Task) => void; onParentChange: (parentUid: string | null) => void; onOrder: (order: number) => void;
   onDependency: (from: string, to: string) => void; onAdd: () => void; onDelete: () => void; onClose: () => void;
 }) {
   const [labels, setLabels] = useState(task.labels.join(', '));
+  const [durationInput, setDurationInput] = useState(String(task.duration_days));
+  const [durationFocused, setDurationFocused] = useState(false);
+  useEffect(() => {
+    if (!durationFocused) setDurationInput(String(task.duration_days));
+  }, [task.duration_days, durationFocused]);
   const [dependency, setDependency] = useState('');
   const childUids = new Set(project.tasks.filter(value => value.parent_uid === task.uid).map(value => value.uid));
   const forbiddenParents = descendantUids(project, task.uid);
@@ -45,7 +51,18 @@ export function TaskEditor({ task, project, scheduled, dependencyEdges, relation
     <MomentInput title="最早可开始时间" value={task.earliest_start} onChange={v => set('earliest_start', v)} />
     {!task.earliest_start && <p className="field-note">使用项目开始日期：{project.project.start_date} 上午</p>}
     <MomentInput title="最迟需完成时间" value={task.latest_finish} onChange={v => set('latest_finish', v)} />
-    <label>预计耗时（天）<input type="number" min="0.5" step="0.5" value={task.duration_days} onChange={e => set('duration_days', Number(e.target.value))} /></label>
+    <label>预计耗时（天）<input type="number" min="0.5" max="36500" step="0.5" disabled={defaultDuration === undefined} value={durationInput} onFocus={() => setDurationFocused(true)} onChange={e => {
+      const input = e.target.value;
+      setDurationInput(input);
+      // Keep the raw text in the focused field while the valid draft drives the preview.
+      if (defaultDuration !== undefined) set('duration_days', durationFromInput(input, defaultDuration));
+    }} onBlur={e => {
+      setDurationFocused(false);
+      if (defaultDuration === undefined) return;
+      const duration = durationFromInput(e.target.value, defaultDuration);
+      setDurationInput(String(duration));
+      if (duration !== task.duration_days) set('duration_days', duration);
+    }} /></label>
     <label className="checkbox"><input type="checkbox" checked={task.allow_rest_day_work} onChange={e => set('allow_rest_day_work', e.target.checked)} />允许休息日工作</label>
     </fieldset>
     <label>自定义标签<input value={labels} placeholder="用逗号分隔，例如：开发, 核心" onChange={e => { setLabels(e.target.value); set('labels', [...new Set(e.target.value.split(/[,，]/).map(s => s.trim()).filter(Boolean))]); }} /></label>

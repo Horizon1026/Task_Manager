@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import type { Scale } from './model';
 import { pixelsPerDay } from './timeline';
 import { GANTT_ZOOM_LEVELS, normalizeGanttZoom } from './ganttZoom';
@@ -14,10 +14,10 @@ export function useGanttViewport({ scale, origin, focusUid, onSelect, skipClick 
   const [taskListWidth, setTaskListWidth] = useState(260);
   const [viewportWidth, setViewportWidth] = useState(1360);
   const [zoom, setZoom] = useState(1);
-  const [scrollLeft, setScrollLeft] = useState(0);
   const scroll = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<{ x: number; width: number } | null>(null);
   const panRef = useRef<{ x: number; scrollLeft: number; moved: boolean } | null>(null);
+  const previousAxis = useRef({ origin, pps: pixelsPerDay[scale] / 2 });
   const zoomAnchorRef = useRef<number | null>(null);
   const ppd = pixelsPerDay[scale] * zoom;
   const pps = ppd / 2;
@@ -32,10 +32,20 @@ export function useGanttViewport({ scale, origin, focusUid, onSelect, skipClick 
   }, []);
   useLayoutEffect(() => {
     const node = scroll.current, anchorSlot = zoomAnchorRef.current;
-    if (!node || anchorSlot === null) return;
-    zoomAnchorRef.current = null;
-    const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
-    node.scrollLeft = Math.max(0, (anchorSlot - origin * 2) * pps - visibleTimelineWidth / 2);
+    const previous = previousAxis.current;
+    previousAxis.current = { origin, pps };
+    if (!node) return;
+    if (anchorSlot !== null) {
+      zoomAnchorRef.current = null;
+      const visibleTimelineWidth = Math.max(0, node.clientWidth - taskListWidth);
+      node.scrollLeft = Math.max(0, (anchorSlot - origin * 2) * pps - visibleTimelineWidth / 2);
+    } else if (previous.origin !== origin && previous.pps === pps) {
+      // Expanding toward earlier deadlines changes the coordinate origin, not
+      // the date the user is looking at. Compensate before the browser paints.
+      const offset = (previous.origin - origin) * 2 * pps;
+      node.scrollLeft += offset;
+      if (panRef.current) panRef.current.scrollLeft += offset;
+    }
   }, [zoom, origin, pps, taskListWidth]);
   function changeZoom(next: number) {
     const target = normalizeGanttZoom(next);
@@ -89,8 +99,7 @@ export function useGanttViewport({ scale, origin, focusUid, onSelect, skipClick 
     panRef.current = null;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
-  return { taskListWidth, viewportWidth, zoom, scrollLeft, scroll, ppd, pps, zoomIndex,
+  return { taskListWidth, viewportWidth, zoom, scroll, ppd, pps, zoomIndex,
     changeZoom, beginListResize, resizeList, finishListResize,
-    beginPan, beginParentPan, beginFocusPan, pan, finishPan,
-    onScroll: (event: UIEvent<HTMLDivElement>) => setScrollLeft(event.currentTarget.scrollLeft) };
+    beginPan, beginParentPan, beginFocusPan, pan, finishPan };
 }

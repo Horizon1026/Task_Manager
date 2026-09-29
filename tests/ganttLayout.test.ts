@@ -88,3 +88,19 @@ test('shared task visibility preserves ancestors for label filters and export se
   assert.deepEqual([...visibleTaskUids(value, { labels: [], mode: 'or' }, '视觉')].sort(), ['child', 'parent']);
   assert.deepEqual([...visibleTaskUids(value, { labels: ['开发'], mode: 'and' }, '视觉')], []);
 });
+
+test('assignee filtering intersects labels and retains ancestor context', () => {
+  const p = project([task('parent'), task('a', { assignee: '甲', parent_uid: 'parent', labels: ['开发'] }), task('b', { assignee: '乙', labels: ['开发'] }), task('c', { assignee: '甲', labels: ['测试'] })]);
+  assert.deepEqual([...visibleTaskUids(p, { labels: ['开发'], mode: 'or', assignees: ['甲'] })].sort(), ['a', 'parent']);
+  assert.equal(visibleTaskUids(p, { labels: [], mode: 'or', assignees: [] }).size, 4);
+});
+
+
+test('assignee OR and AND compose with label modes and keep legacy default OR', () => {
+  const p = project([task('a', { assignee: '甲', labels: ['开发', '核心'] }), task('b', { assignee: '乙', labels: ['开发'] }), task('c', { assignee: '丙', labels: ['核心'] })]);
+  assert.deepEqual([...visibleTaskUids(p, { labels: ['开发', '核心'], mode: 'or', assignees: ['甲', '乙'] })], ['a', 'b']);
+  assert.deepEqual([...visibleTaskUids(p, { labels: ['开发', '核心'], mode: 'and', assignees: ['甲', '乙'], assignee_mode: 'or' })], ['a']);
+  assert.equal(visibleTaskUids(p, { labels: [], mode: 'or', assignees: ['甲', '乙'], assignee_mode: 'and' }).size, 0);
+  assert.deepEqual([...visibleTaskUids(p, { labels: [], mode: 'or', assignees: ['乙'], assignee_mode: 'and' })], ['b']);
+  assert.equal(visibleTaskUids(p, { labels: [], mode: 'and', assignees: [], assignee_mode: 'and' }).size, 3);
+});
