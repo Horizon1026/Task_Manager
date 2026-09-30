@@ -1,0 +1,1730 @@
+# Source-level dependency map derived from Perception_Utility/src Python imports.
+# Every leaf represents one Python file; dependency dates are illustrative layout slots.
+version: 1
+project:
+  name: Perception_Utility 源码模块依赖图（静态 import）
+  start_date: '2026-09-30'
+  default_scale: week
+  theme: dark
+  default_filter:
+    labels: []
+    mode: or
+  allow_assignee_parallel_tasks: true
+  assignees:
+  - 未指定
+calendar:
+  years: []
+  overrides: []
+tasks:
+- uid: pkg-core
+  order: 1
+  name: Core：基础容器与运行环境
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-core-init
+  order: 2
+  name: core/__init__.py
+  description: '源码：src/core/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-core
+  collapse_children: false
+  dependencies:
+  - mod-core-device
+  - mod-core-runtime
+  - mod-core-structures
+  - mod-core-tree
+  labels:
+  - 源码
+  - core
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-core-device
+  order: 3
+  name: core/device.py
+  description: '源码：src/core/device.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-core
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - core
+  allow_rest_day_work: true
+- uid: mod-core-runtime
+  order: 4
+  name: core/runtime.py
+  description: '源码：src/core/runtime.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-core
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - core
+  allow_rest_day_work: true
+- uid: mod-core-structures
+  order: 5
+  name: core/structures.py
+  description: '源码：src/core/structures.py。职责：统一 Sample、SampleBatch、StepContext、StepResult。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-core
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - core
+  allow_rest_day_work: true
+- uid: mod-core-tree
+  order: 6
+  name: core/tree.py
+  description: '源码：src/core/tree.py。职责：Tensor 树的设备迁移与脱离计算图。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-core
+  collapse_children: false
+  dependencies:
+  - mod-data-metadata
+  labels:
+  - 源码
+  - core
+  allow_rest_day_work: true
+- uid: pkg-data
+  order: 7
+  name: Data：契约、数据集和变换
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-data-init
+  order: 8
+  name: data/__init__.py
+  description: '源码：src/data/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies:
+  - mod-data-classification
+  - mod-data-dataset-classification_cifar10
+  - mod-data-dataset-classification_mnist
+  - mod-data-dataset-detection_ceymo
+  - mod-data-dataset-detection_coco
+  - mod-data-dataset-segmentation_ade20k
+  - mod-data-dataset-segmentation_aeroscapes
+  - mod-data-dataset-segmentation_ceymo
+  - mod-data-dataset-segmentation_cityscapes
+  - mod-data-dataset-segmentation_drive
+  - mod-data-detection
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-data-classification
+  order: 9
+  name: data/classification.py
+  description: '源码：src/data/classification.py。职责：分类目标、文件夹数据集和 collator。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-detection
+  order: 10
+  name: data/detection.py
+  description: '源码：src/data/detection.py。职责：检测目标、忽略框和变长 collator。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-metadata
+  order: 11
+  name: data/metadata.py
+  description: '源码：src/data/metadata.py。职责：图像身份、原始尺寸和几何变换记录。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-palette
+  order: 12
+  name: data/palette.py
+  description: '源码：src/data/palette.py。职责：目标类别展示颜色规则。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-segmentation
+  order: 13
+  name: data/segmentation.py
+  description: '源码：src/data/segmentation.py。职责：分割目标、有效区域和 collator。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-sensor_input
+  order: 14
+  name: data/sensor_input.py
+  description: '源码：src/data/sensor_input.py。职责：统一图像输入容器。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: mod-data-specs_common
+  order: 15
+  name: data/specs_common.py
+  description: '源码：src/data/specs_common.py。职责：源标签、目标类别、映射、路径和数据集 Spec。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: false
+  dependencies:
+  - mod-data-classification
+  - mod-data-palette
+  - mod-data-segmentation
+  labels:
+  - 源码
+  - data
+  allow_rest_day_work: true
+- uid: pkg-data-dataset
+  order: 16
+  name: Dataset：具体数据集适配
+  description: 按源码目录分组；展开后查看每个文件及其直接静态导入。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-data-dataset-init
+  order: 17
+  name: data/dataset/__init__.py
+  description: '源码：src/data/dataset/__init__.py。职责：聚合并重导出本子包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-data-dataset-classification_cifar10
+  - mod-data-dataset-classification_mnist
+  - mod-data-dataset-detection_ceymo
+  - mod-data-dataset-detection_coco
+  - mod-data-dataset-segmentation_ade20k
+  - mod-data-dataset-segmentation_aeroscapes
+  - mod-data-dataset-segmentation_ceymo
+  - mod-data-dataset-segmentation_cityscapes
+  - mod-data-dataset-segmentation_drive
+  labels:
+  - 源码
+  - data
+  - dataset
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-data-dataset-classification_cifar10
+  order: 18
+  name: data/dataset/classification_cifar10.py
+  description: '源码：src/data/dataset/classification_cifar10.py。职责：CIFAR-10 image-folder classification definition.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-classification_mnist
+  order: 19
+  name: data/dataset/classification_mnist.py
+  description: '源码：src/data/dataset/classification_mnist.py。职责：MNIST PNG image-folder classification definition.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-detection_ceymo
+  order: 20
+  name: data/dataset/detection_ceymo.py
+  description: '源码：src/data/dataset/detection_ceymo.py。职责：CeyMo VOC box annotations and their 11-class detection
+    spec.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-detection
+  - mod-data-metadata
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-detection_coco
+  order: 21
+  name: data/dataset/detection_coco.py
+  description: '源码：src/data/dataset/detection_coco.py。职责：COCO 2017 instance boxes and their 80-class detection spec.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-detection
+  - mod-data-metadata
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-segmentation_ade20k
+  order: 22
+  name: data/dataset/segmentation_ade20k.py
+  description: '源码：src/data/dataset/segmentation_ade20k.py。职责：ADE20K sky-or-water versus other semantic segmentation
+    dataset.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-segmentation_aeroscapes
+  order: 23
+  name: data/dataset/segmentation_aeroscapes.py
+  description: '源码：src/data/dataset/segmentation_aeroscapes.py。职责：AeroScapes split lists, class-ID masks, and segmentation
+    spec.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-segmentation_ceymo
+  order: 24
+  name: data/dataset/segmentation_ceymo.py
+  description: '源码：src/data/dataset/segmentation_ceymo.py。职责：CeyMo RGB mask decoding and road-marking segmentation
+    spec.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-segmentation_cityscapes
+  order: 25
+  name: data/dataset/segmentation_cityscapes.py
+  description: '源码：src/data/dataset/segmentation_cityscapes.py。职责：Cityscapes label mapping, paired image dataset,
+    and dataset definition.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: mod-data-dataset-segmentation_drive
+  order: 26
+  name: data/dataset/segmentation_drive.py
+  description: '源码：src/data/dataset/segmentation_drive.py。职责：DRIVE retinal-vessel masks, field-of-view validity,
+    and dataset spec.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-dataset
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-data-specs_common
+  labels:
+  - 源码
+  - data
+  - dataset
+  allow_rest_day_work: true
+- uid: pkg-data-geometry
+  order: 27
+  name: Geometry：通用框几何
+  description: 按源码目录分组；展开后查看每个文件及其直接静态导入。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-data-geometry-init
+  order: 28
+  name: data/geometry/__init__.py
+  description: '源码：src/data/geometry/__init__.py。职责：聚合并重导出本子包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-geometry
+  collapse_children: false
+  dependencies:
+  - mod-data-geometry-boxes
+  labels:
+  - 源码
+  - data
+  - geometry
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-data-geometry-boxes
+  order: 29
+  name: data/geometry/boxes.py
+  description: '源码：src/data/geometry/boxes.py。职责：框坐标转换、IoU 与 GIoU。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-geometry
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - data
+  - geometry
+  allow_rest_day_work: true
+- uid: pkg-data-transforms
+  order: 30
+  name: Transforms：样本级增强
+  description: 按源码目录分组；展开后查看每个文件及其直接静态导入。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-data-transforms-init
+  order: 31
+  name: data/transforms/__init__.py
+  description: '源码：src/data/transforms/__init__.py。职责：聚合并重导出本子包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-transforms
+  collapse_children: false
+  dependencies:
+  - mod-data-transforms-classification
+  - mod-data-transforms-detection
+  - mod-data-transforms-segmentation
+  - mod-data-transforms-transforms
+  labels:
+  - 源码
+  - data
+  - transforms
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-data-transforms-classification
+  order: 32
+  name: data/transforms/classification.py
+  description: '源码：src/data/transforms/classification.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-transforms
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-classification
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  - transforms
+  allow_rest_day_work: true
+- uid: mod-data-transforms-detection
+  order: 33
+  name: data/transforms/detection.py
+  description: '源码：src/data/transforms/detection.py。职责：Geometry-aware image detection transforms.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-transforms
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  - transforms
+  allow_rest_day_work: true
+- uid: mod-data-transforms-segmentation
+  order: 34
+  name: data/transforms/segmentation.py
+  description: '源码：src/data/transforms/segmentation.py。职责：Synchronized image and mask transforms for semantic segmentation.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-transforms
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-metadata
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  - transforms
+  allow_rest_day_work: true
+- uid: mod-data-transforms-transforms
+  order: 35
+  name: data/transforms/transforms.py
+  description: '源码：src/data/transforms/transforms.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-data-transforms
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-data-sensor_input
+  labels:
+  - 源码
+  - data
+  - transforms
+  allow_rest_day_work: true
+- uid: pkg-model
+  order: 36
+  name: Model：输出与后处理
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-model-init
+  order: 37
+  name: model/__init__.py
+  description: '源码：src/model/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model
+  collapse_children: false
+  dependencies:
+  - mod-model-model_output
+  - mod-model-parameters
+  labels:
+  - 源码
+  - model
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-model-model_output
+  order: 38
+  name: model/model_output.py
+  description: '源码：src/model/model_output.py。职责：原始模型输出与统一 Prediction 类型。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - model
+  allow_rest_day_work: true
+- uid: mod-model-parameters
+  order: 39
+  name: model/parameters.py
+  description: '源码：src/model/parameters.py。职责：Format model parameter counts for experiment reports.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - model
+  allow_rest_day_work: true
+- uid: pkg-model-postprocessors
+  order: 40
+  name: Postprocessors：模型解码
+  description: 按源码目录分组；展开后查看每个文件及其直接静态导入。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-model-postprocessors-init
+  order: 41
+  name: model/postprocessors/__init__.py
+  description: '源码：src/model/postprocessors/__init__.py。职责：聚合并重导出本子包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model-postprocessors
+  collapse_children: false
+  dependencies:
+  - mod-model-model_output
+  - mod-model-postprocessors-detection
+  labels:
+  - 源码
+  - model
+  - postprocessors
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-model-postprocessors-detection
+  order: 42
+  name: model/postprocessors/detection.py
+  description: '源码：src/model/postprocessors/detection.py。职责：Query 与 anchor-grid 检测输出解码。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-model-postprocessors
+  collapse_children: false
+  dependencies:
+  - mod-data-geometry-boxes
+  - mod-model-model_output
+  labels:
+  - 源码
+  - model
+  - postprocessors
+  allow_rest_day_work: true
+- uid: pkg-objectives
+  order: 43
+  name: Objectives：训练损失
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-objectives-init
+  order: 44
+  name: objectives/__init__.py
+  description: '源码：src/objectives/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies:
+  - mod-objectives-classification
+  - mod-objectives-detection_anchor_grid
+  - mod-objectives-detection_query
+  - mod-objectives-segmentation
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - objectives
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-objectives-classification
+  order: 45
+  name: objectives/classification.py
+  description: '源码：src/objectives/classification.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies:
+  - mod-data-classification
+  - mod-model-model_output
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - objectives
+  allow_rest_day_work: true
+- uid: mod-objectives-detection_anchor_grid
+  order: 46
+  name: objectives/detection_anchor_grid.py
+  description: '源码：src/objectives/detection_anchor_grid.py。职责：Anchor matching and box, objectness, and class losses
+    for YOLOv5.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies:
+  - mod-data-detection
+  - mod-data-geometry-boxes
+  - mod-model-model_output
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - objectives
+  allow_rest_day_work: true
+- uid: mod-objectives-detection_query
+  order: 47
+  name: objectives/detection_query.py
+  description: '源码：src/objectives/detection_query.py。职责：Hungarian set matching and DETR classification/box losses.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies:
+  - mod-data-detection
+  - mod-data-geometry-boxes
+  - mod-model-model_output
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - objectives
+  allow_rest_day_work: true
+- uid: mod-objectives-segmentation
+  order: 48
+  name: objectives/segmentation.py
+  description: '源码：src/objectives/segmentation.py。职责：Cross-entropy, focal, and CE plus Dice objectives for semantic
+    segmentation.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies:
+  - mod-data-segmentation
+  - mod-model-model_output
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - objectives
+  allow_rest_day_work: true
+- uid: mod-objectives-structures
+  order: 49
+  name: objectives/structures.py
+  description: '源码：src/objectives/structures.py。职责：Objective、ObjectiveContext 和 LossResult。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-objectives
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - objectives
+  allow_rest_day_work: true
+- uid: pkg-metrics
+  order: 50
+  name: Metrics：整轮指标
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-metrics-init
+  order: 51
+  name: metrics/__init__.py
+  description: '源码：src/metrics/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-metrics
+  collapse_children: false
+  dependencies:
+  - mod-metrics-classification
+  - mod-metrics-detection
+  - mod-metrics-segmentation
+  labels:
+  - 源码
+  - metrics
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-metrics-classification
+  order: 52
+  name: metrics/classification.py
+  description: '源码：src/metrics/classification.py。职责：整轮分类混淆矩阵指标。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-metrics
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - metrics
+  allow_rest_day_work: true
+- uid: mod-metrics-detection
+  order: 53
+  name: metrics/detection.py
+  description: '源码：src/metrics/detection.py。职责：整轮内部近似 Box AP。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-metrics
+  collapse_children: false
+  dependencies:
+  - mod-data-detection
+  - mod-data-geometry-boxes
+  - mod-metrics-segmentation
+  - mod-model-model_output
+  labels:
+  - 源码
+  - metrics
+  allow_rest_day_work: true
+- uid: mod-metrics-segmentation
+  order: 54
+  name: metrics/segmentation.py
+  description: '源码：src/metrics/segmentation.py。职责：整轮像素混淆矩阵指标。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-metrics
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - metrics
+  allow_rest_day_work: true
+- uid: pkg-tasks
+  order: 55
+  name: Tasks：任务编排和对齐
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-tasks-init
+  order: 56
+  name: tasks/__init__.py
+  description: '源码：src/tasks/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-tasks
+  collapse_children: false
+  dependencies:
+  - mod-tasks-classification
+  - mod-tasks-detection
+  - mod-tasks-segmentation
+  labels:
+  - 源码
+  - tasks
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-tasks-alignment
+  order: 57
+  name: tasks/alignment.py
+  description: '源码：src/tasks/alignment.py。职责：分割分数图与检测框的坐标对齐。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-tasks
+  collapse_children: false
+  dependencies:
+  - mod-data-metadata
+  - mod-model-model_output
+  labels:
+  - 源码
+  - tasks
+  allow_rest_day_work: true
+- uid: mod-tasks-classification
+  order: 58
+  name: tasks/classification.py
+  description: '源码：src/tasks/classification.py。职责：Connect image classification outputs, batch loss, and epoch metrics.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-tasks
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-core-tree
+  - mod-data-classification
+  - mod-data-sensor_input
+  - mod-metrics-classification
+  - mod-model-model_output
+  - mod-objectives-classification
+  - mod-objectives-structures
+  labels:
+  - 源码
+  - tasks
+  allow_rest_day_work: true
+- uid: mod-tasks-detection
+  order: 59
+  name: tasks/detection.py
+  description: '源码：src/tasks/detection.py。职责：Connect detector families through one decoded-prediction and epoch-metric
+    path.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-tasks
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-core-tree
+  - mod-data-detection
+  - mod-data-sensor_input
+  - mod-objectives-structures
+  - mod-tasks-alignment
+  labels:
+  - 源码
+  - tasks
+  allow_rest_day_work: true
+- uid: mod-tasks-segmentation
+  order: 60
+  name: tasks/segmentation.py
+  description: '源码：src/tasks/segmentation.py。职责：Connect segmentation models, aligned predictions, and valid-pixel
+    metrics.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-tasks
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-core-tree
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-metrics-segmentation
+  - mod-model-model_output
+  - mod-objectives-segmentation
+  - mod-objectives-structures
+  - mod-tasks-alignment
+  labels:
+  - 源码
+  - tasks
+  allow_rest_day_work: true
+- uid: pkg-engine
+  order: 61
+  name: Engine：训练循环
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-engine-init
+  order: 62
+  name: engine/__init__.py
+  description: '源码：src/engine/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-engine
+  collapse_children: false
+  dependencies:
+  - mod-engine-trainer
+  labels:
+  - 源码
+  - engine
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-engine-trainer
+  order: 63
+  name: engine/trainer.py
+  description: '源码：src/engine/trainer.py。职责：训练、验证、调度器、checkpoint 与权重初始化。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-engine
+  collapse_children: false
+  dependencies:
+  - mod-core-structures
+  - mod-core-tree
+  labels:
+  - 源码
+  - engine
+  allow_rest_day_work: true
+- uid: pkg-visualization
+  order: 64
+  name: Visualization：预览、日志与页面
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-visualization-init
+  order: 65
+  name: visualization/__init__.py
+  description: '源码：src/visualization/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-visualization-binlog
+  - mod-visualization-classification
+  - mod-visualization-detection
+  - mod-visualization-factory
+  - mod-visualization-live
+  - mod-visualization-logger
+  - mod-visualization-segmentation
+  - mod-visualization-training
+  labels:
+  - 源码
+  - visualization
+  - 公开导出
+  allow_rest_day_work: true
+- uid: mod-visualization-binlog
+  order: 66
+  name: visualization/binlog.py
+  description: '源码：src/visualization/binlog.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-visualization-image
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-classification
+  order: 67
+  name: visualization/classification.py
+  description: '源码：src/visualization/classification.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-data-classification
+  - mod-data-sensor_input
+  - mod-model-model_output
+  - mod-visualization-preparation
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-detection
+  order: 68
+  name: visualization/detection.py
+  description: '源码：src/visualization/detection.py。职责：Three-column image, truth, and prediction previews for object
+    detection.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-data-sensor_input
+  - mod-metrics-segmentation
+  - mod-visualization-preparation
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-factory
+  order: 69
+  name: visualization/factory.py
+  description: '源码：src/visualization/factory.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-visualization-binlog
+  - mod-visualization-live
+  - mod-visualization-logger
+  - mod-visualization-training
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-image
+  order: 70
+  name: visualization/image.py
+  description: '源码：src/visualization/image.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-live
+  order: 71
+  name: visualization/live.py
+  description: '源码：src/visualization/live.py。职责：实时甘特图之外的训练仪表页面。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-visualization-image
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-logger
+  order: 72
+  name: visualization/logger.py
+  description: '源码：src/visualization/logger.py。职责：源码模块。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-palette
+  order: 73
+  name: visualization/palette.py
+  description: '源码：src/visualization/palette.py。职责：Expose the shared output palette to preview renderers.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-data-palette
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-preparation
+  order: 74
+  name: visualization/preparation.py
+  description: '源码：src/visualization/preparation.py。职责：原图样本与预测的预览数据准备。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-data-metadata
+  - mod-model-model_output
+  - mod-tasks-alignment
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-replay
+  order: 75
+  name: visualization/replay.py
+  description: '源码：src/visualization/replay.py。职责：二进制训练日志回放。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-visualization-live
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-segmentation
+  order: 76
+  name: visualization/segmentation.py
+  description: '源码：src/visualization/segmentation.py。职责：Image, target, and prediction preview for semantic segmentation.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies:
+  - mod-data-segmentation
+  - mod-data-sensor_input
+  - mod-metrics-segmentation
+  - mod-model-model_output
+  - mod-visualization-preparation
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: mod-visualization-training
+  order: 77
+  name: visualization/training.py
+  description: '源码：src/visualization/training.py。职责：逐 batch loss 与逐 epoch metric 事件。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-visualization
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 源码
+  - visualization
+  allow_rest_day_work: true
+- uid: pkg-geometry
+  order: 78
+  name: Geometry：旧路径兼容导出
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-geometry-init
+  order: 79
+  name: geometry/__init__.py
+  description: '源码：src/geometry/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-geometry
+  collapse_children: false
+  dependencies:
+  - mod-data-geometry-boxes
+  labels:
+  - 源码
+  - geometry
+  - 公开导出
+  - 兼容层
+  allow_rest_day_work: true
+- uid: mod-geometry-boxes
+  order: 80
+  name: geometry/boxes.py
+  description: '源码：src/geometry/boxes.py。职责：Compatibility imports for box geometry moved under data.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-geometry
+  collapse_children: false
+  dependencies:
+  - mod-data-geometry-boxes
+  labels:
+  - 源码
+  - geometry
+  - 兼容层
+  allow_rest_day_work: true
+- uid: pkg-postprocessors
+  order: 81
+  name: Postprocessors：旧路径兼容导出
+  description: 目录分组；叶子任务逐一对应 src/ 下的 Python 文件。依赖箭头代表静态导入，不代表开发先后；日期和半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: null
+  collapse_children: true
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-postprocessors-init
+  order: 82
+  name: postprocessors/__init__.py
+  description: '源码：src/postprocessors/__init__.py。职责：聚合并重导出本包的公开 API。
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-postprocessors
+  collapse_children: false
+  dependencies:
+  - mod-postprocessors-detection
+  - mod-postprocessors-structures
+  labels:
+  - 源码
+  - postprocessors
+  - 公开导出
+  - 兼容层
+  allow_rest_day_work: true
+- uid: mod-postprocessors-detection
+  order: 83
+  name: postprocessors/detection.py
+  description: '源码：src/postprocessors/detection.py。职责：Compatibility imports for the model postprocessor package.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-postprocessors
+  collapse_children: false
+  dependencies:
+  - mod-model-postprocessors-detection
+  labels:
+  - 源码
+  - postprocessors
+  - 兼容层
+  allow_rest_day_work: true
+- uid: mod-postprocessors-structures
+  order: 84
+  name: postprocessors/structures.py
+  description: '源码：src/postprocessors/structures.py。职责：Compatibility import for the common detection prediction
+    type.
+
+    前置依赖表示此文件直接导入的框架内模块；标准库和第三方库未绘出。'
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 0.5
+  parent_uid: pkg-postprocessors
+  collapse_children: false
+  dependencies:
+  - mod-model-model_output
+  labels:
+  - 源码
+  - postprocessors
+  - 兼容层
+  allow_rest_day_work: true

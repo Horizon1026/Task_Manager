@@ -46,3 +46,5 @@ npm run viewer:check # 检查离线查看器生成文件是否与源码一致（
 离线查看器源码是 `src/interactiveViewer.ts` 和 `src/interactiveViewer.css`；构建时自动生成内联资源，无需编辑 `src/interactiveViewer.generated.ts`。浏览器测试使用临时 YAML，不会修改示例项目。
 
 CI 中可在构建前运行 `npm run viewer:check`，过期的生成文件会使检查失败；此时运行 `npm run viewer:build` 并将生成文件一并提交。
+
+感知框架当前模块关系见 [perception_framework_modules.md](data/perception_framework_modules.md)。
