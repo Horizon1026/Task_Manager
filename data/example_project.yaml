@@ -169,7 +169,6 @@ tasks:
     dependencies:
       - review
     until:
-      - checkpoint
       - integrate
     labels:
       - until

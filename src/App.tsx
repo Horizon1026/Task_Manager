@@ -120,7 +120,7 @@ export function App() {
   const unknown = [...new Set([...calculated.schedule.values()].flatMap(s => s.unknownYears))].sort();
   return <div className={`app ${focusUid ? 'dependency-focus-active' : ''}`}>
     <header className="app-header">
-      <div className="brand"><span className="brand-icon">T</span><div><strong>TaskManager</strong><small>让计划清晰可见</small></div></div>
+      <div className="brand"><span className="brand-icon">T</span><div><strong>TaskManager</strong><small>让计划清晰可见 / github.com/Horizon1026</small></div></div>
       <nav aria-label="工作区导航">
         <span className="nav-active">任务排期</span>
         <button disabled={saving || !!focusUid} onClick={() => setModal('settings')}>项目设置</button>
