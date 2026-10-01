@@ -12,18 +12,18 @@ test.beforeEach(async ({ page, request }) => {
   await expect(page.getByRole('heading', { name: 'TaskManager 示例项目' })).toBeVisible();
 });
 
-test('hover remains available during M focus and above the left list with a fully readable long description', async ({ page, request }) => {
+test('hover remains available during F focus and above the left list with a fully readable long description', async ({ page, request }) => {
   const data = await (await request.get('/api/project')).json();
   const description = ('完整详情需要保留换行和全部文字。\n').repeat(100) + '详情末尾标记';
   data.project.tasks[1].description = description;
   await writeFile(data.file, stringify(data.project));
   await page.reload();
   await page.getByTestId('bar-task-design').hover();
-  await page.keyboard.down('m');
+  await page.keyboard.down('f');
   await page.mouse.move(5, 5);
   await page.getByTestId('bar-task-discovery').hover();
   await expect(page.locator('.hover-card')).toContainText('需求梳理');
-  await page.keyboard.up('m');
+  await page.keyboard.up('f');
   await page.mouse.move(5, 5);
   await page.locator('.tree-task-cell[data-task-uid="task-design"]').hover({ position: { x: 10, y: 10 } });
   const popup = page.locator('.hover-card');

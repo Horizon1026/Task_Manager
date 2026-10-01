@@ -92,6 +92,15 @@ test('R-right-drag latches parent mode, migrates dependencies and supports movin
   expect(saved.tasks.find((t: { uid: string }) => t.uid === 'c').dependencies).toEqual(['b']);
 });
 
+test('F focus ignores a hovered parent task', async ({ page }) => {
+  await startParentDrag(page, 'c', 'a');
+  await endParentDrag(page);
+  await page.getByTestId('bar-a').hover();
+  await page.keyboard.down('f');
+  await expect(page.locator('.gantt-section')).not.toHaveClass(/dependency-focus-mode/);
+  await page.keyboard.up('f');
+});
+
 test('parent drag cancellation and typing R leave ordinary right-drag unchanged', async ({ page }) => {
   await startParentDrag(page, 'c', 'a');
   await page.keyboard.press('Escape'); await endParentDrag(page);

@@ -9,21 +9,25 @@ export function setTaskParent(project: Project, uid: string, parentUid: string |
   if (task.parent_uid === parentUid) return project;
   const firstChild = parent !== undefined && !project.tasks.some(value => value.parent_uid === parentUid);
   const inherited = firstChild ? parent.dependencies : [];
-  const hasDependents = firstChild && project.tasks.some(value => value.dependencies.includes(parentUid!));
-  if ((inherited.length || hasDependents) && project.tasks.some(value => value.parent_uid === uid)) {
+  const inheritedUntil = firstChild ? (parent.until ?? []) : [];
+  const hasDependents = firstChild && project.tasks.some(value => value.dependencies.includes(parentUid!) || value.until?.includes(parentUid!));
+  if ((inherited.length || inheritedUntil.length || hasDependents) && project.tasks.some(value => value.parent_uid === uid)) {
     throw new Error('接收任务已有子任务，不能承接前置依赖或被依赖关系；请选择叶子任务');
   }
   const next = { ...project, tasks: project.tasks.map(value => {
     let dependencies = value.dependencies;
+    let until = value.until;
     if (firstChild) {
-      if (value.uid === parentUid) dependencies = [];
+      if (value.uid === parentUid) { dependencies = []; if (until) until = []; }
       else {
         const combined = value.uid === uid ? [...dependencies, ...inherited] : dependencies;
         dependencies = [...new Set(combined.map(dependency => dependency === parentUid ? uid : dependency))];
+        const untilTargets = value.uid === uid ? [...(until ?? []), ...inheritedUntil] : (until ?? []);
+        if (untilTargets.length || until) until = [...new Set(untilTargets.map(target => target === parentUid ? uid : target))];
       }
     }
-    return value.uid === uid ? { ...value, parent_uid: parentUid, dependencies }
-      : dependencies !== value.dependencies ? { ...value, dependencies } : value;
+    return value.uid === uid ? { ...value, parent_uid: parentUid, dependencies, ...(until === undefined ? {} : { until }) }
+      : dependencies !== value.dependencies || until !== value.until ? { ...value, dependencies, ...(until === undefined ? {} : { until }) } : value;
   }) };
   // Validate before tree traversal: invalid parent cycles must never drop tasks.
   return normalizeTreeOrder(validateProject(next));

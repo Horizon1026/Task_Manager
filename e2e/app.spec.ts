@@ -132,7 +132,20 @@ test('zooms the timeline horizontally while keeping task rows unchanged', async 
   await expect(page.getByRole('button', { name: '重置甘特图缩放' })).toHaveText('100%');
   await expect.poll(async () => (await bar.boundingBox())!.width).toBeCloseTo(before.width, 0);
 });
-test('holding M focuses direct dependencies in read-only mode and releasing it restores the view', async ({ page }) => {
+test('changing time scale clears the selected task and its dependency arrows', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const bar = page.getByTestId('bar-task-design');
+  for (const scale of ['天', '周', '月']) {
+    await bar.click();
+    await expect(page.getByLabel('任务详情编辑')).toBeVisible();
+    await expect(page.locator('.dependency-arrow')).toHaveCount(2);
+    await page.getByRole('button', { name: scale, exact: true }).click();
+    await expect(page.getByLabel('任务详情编辑')).toHaveCount(0);
+    await expect(page.locator('.dependency-arrow, .dependency-arrowhead')).toHaveCount(0);
+  }
+});
+
+test('holding F focuses direct dependencies in read-only mode and releasing it restores the view', async ({ page }) => {
   const resize = (await page.getByRole('separator', { name: '调整任务列表宽度' }).boundingBox())!;
   await page.mouse.move(resize.x, resize.y + resize.height / 2);
   await page.mouse.down(); await page.mouse.move(resize.x + 120, resize.y + resize.height / 2, { steps: 6 }); await page.mouse.up();
@@ -141,7 +154,7 @@ test('holding M focuses direct dependencies in read-only mode and releasing it r
   await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBe(60);
   const bar = page.getByTestId('bar-task-design');
   await bar.hover();
-  await page.keyboard.down('m');
+  await page.keyboard.down('f');
   await expect(page.locator('.gantt-section')).toHaveClass(/dependency-focus-mode/);
   await expect(page.locator('.gantt-caption')).toContainText('交互与视觉设计');
   await expect(page.locator('.task-bar')).toHaveCount(3);
@@ -159,7 +172,7 @@ test('holding M focuses direct dependencies in read-only mode and releasing it r
   await expect(page.getByLabel('任务详情编辑')).toHaveCount(0);
   await expect(page.getByTestId('save-state')).toContainText('与 YAML 同步');
 
-  await page.keyboard.up('m');
+  await page.keyboard.up('f');
   await expect(page.locator('.gantt-section')).not.toHaveClass(/dependency-focus-mode/);
   await expect.poll(async () => scroll.evaluate(node => node.scrollLeft)).toBe(60);
   await expect(page.locator('.task-bar')).toHaveCount(6);
@@ -169,9 +182,9 @@ test('holding M focuses direct dependencies in read-only mode and releasing it r
   await page.getByTestId('bar-task-design').click();
   await expect(page.getByLabel('任务详情编辑')).toBeVisible();
   await page.getByTestId('bar-task-design').hover();
-  await page.keyboard.down('m');
+  await page.keyboard.down('f');
   await expect(page.locator('.gantt-section')).not.toHaveClass(/dependency-focus-mode/);
-  await page.keyboard.up('m');
+  await page.keyboard.up('f');
 });
 test('freezes and resizes the left task list', async ({ page }) => {
   const taskList = page.locator('.tree-task-labels');

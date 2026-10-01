@@ -18,7 +18,7 @@ export const taskSchema = z.object({
   // Optional on input for backward-compatible loading of existing project snapshots.
   parent_uid: z.string().min(1).max(100).nullable().default(null),
   collapse_children: z.boolean().default(false),
-  dependencies: z.array(z.string()).max(5000), labels: z.array(z.string().min(1).max(100)).max(100),
+  dependencies: z.array(z.string()).max(5000), until: z.array(z.string()).max(5000).optional(), labels: z.array(z.string().min(1).max(100)).max(100),
   allow_rest_day_work: z.boolean(),
 }).strict();
 export const taskDefaultsSchema = taskSchema.pick({
@@ -105,7 +105,14 @@ export function validateProject(input: unknown): Project {
       seen.add(parent); parent = map.get(parent)!.parent_uid;
     }
     if (children.has(task.uid) && task.dependencies.length) throw new Error(`父任务「${task.name}」不能设置前置依赖；请为叶子任务设置依赖`);
+    if (children.has(task.uid) && task.until?.length) throw new Error(`父任务「${task.name}」不能设置 until 关系；请为叶子任务设置关系`);
     for (const dependency of task.dependencies) if (children.has(dependency)) throw new Error(`任务「${task.name}」不能依赖父任务：${dependency}`);
+    if (new Set(task.until ?? []).size !== (task.until?.length ?? 0)) throw new Error(`任务「${task.name}」存在重复 until 关系`);
+    for (const target of task.until ?? []) {
+      if (!map.has(target)) throw new Error(`until 目标任务不存在：${target}`);
+      if (target === task.uid) throw new Error(`任务「${task.name}」不能持续到自身开始`);
+      if (children.has(target)) throw new Error(`任务「${task.name}」不能持续到父任务开始：${target}`);
+    }
   }
   const visited = new Set<string>();
   const visiting = new Set<string>();

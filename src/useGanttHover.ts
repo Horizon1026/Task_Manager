@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type TaskHover = { uid: string; x: number; y: number };
 
-/** Hover remains enabled in M focus mode. Only active drags suspend previews.
+/** Hover remains enabled in F focus mode. Only active drags suspend previews.
  * Leaving a task delays dismissal so users can cross the gap to a scrollable card.
  */
 export function useGanttHover(suspended: boolean) {

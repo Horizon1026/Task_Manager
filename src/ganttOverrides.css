@@ -49,3 +49,9 @@
 .time-heading[data-native-scroll='true']{animation:gantt-header-scroll linear both;animation-timeline:--gantt-horizontal}
 @keyframes gantt-header-scroll{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--gantt-scroll-distance,0px)))}}
 :root[data-theme='dark'] .gantt-grid>.gantt-header{border-top-color:var(--tm-divider);box-shadow:0 2px 3px #0003}
+
+.task-bar .until-tail{position:absolute;right:0;top:0;bottom:0;max-width:100%;pointer-events:none;background:repeating-linear-gradient(135deg,#e09b3d66 0 5px,#fff3d544 5px 10px);border-left:1px dashed #a36b1f;border-radius:0 4px 4px 0}.task-bar .bar-name{position:relative;z-index:1}.drag-arrow.until-drag-arrow>path{stroke:#c47618}.tree-gantt-body .dependency-layer .until-dependency{stroke:#ba791d;stroke-dasharray:3 3;filter:drop-shadow(0 0 1px #e1a65b88)}
+
+.until-list{margin-bottom:10px}.until-list>div{display:flex;align-items:center;justify-content:space-between;background:#f3f6f1;border-radius:5px;margin:5px 0;padding:7px 9px;font-size:12px}.until-list small{display:block;font-size:9px;color:#91a08b;margin-top:3px}.until-list button{padding:0 4px;border:0;background:none}
+
+@media (min-width: 1051px){.app:has(.editor) .scale-switch{margin-right:380px}}

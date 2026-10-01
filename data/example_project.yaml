@@ -965,3 +965,202 @@ tasks:
     labels:
       - 质量
     allow_rest_day_work: false
+  # 排期规则演示：与产品 PRD 衔接，集中展示依赖、占用、状态与预警。
+  - uid: demo-root
+    order: 51
+    name: 排期规则演示
+    description: 展开子任务可查看前置依赖、until、并行、截止时间和休息日排期。
+    assignee: 产品经理
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: null
+    collapse_children: false
+    dependencies: []
+    labels: [场景演示]
+    allow_rest_day_work: false
+  - uid: demo-kickoff
+    order: 52
+    name: 变更需求确认
+    description: 产品 PRD 完成后确认演示用的设计变更，是多条支线的共同前置任务。
+    assignee: 产品经理
+    status: 已完成
+    earliest_start: null
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [p-prd]
+    labels: [场景演示, 前置依赖]
+    allow_rest_day_work: false
+  - uid: demo-watch
+    order: 53
+    name: 设计变更跟踪
+    description: 实际工作只需一天，但持续占用软件工程师直到变更评审开始；延伸段造成超期。
+    assignee: 软件工程师
+    status: 进行中
+    earliest_start: null
+    latest_finish: { date: 2026-03-25, period: pm }
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    until: [demo-review]
+    labels: [场景演示, until, 超期]
+    allow_rest_day_work: false
+  - uid: demo-review
+    order: 54
+    name: 设计变更评审
+    description: 设定较晚的最早开始时间，展示短工期 until 任务条延伸至本任务开始。
+    assignee: 产品经理
+    status: 验收中
+    earliest_start: { date: 2026-03-30, period: am }
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-watch]
+    labels: [场景演示, 前置依赖]
+    allow_rest_day_work: false
+  - uid: demo-after-watch
+    order: 55
+    name: 评审后变更落地
+    description: 必须等待设计变更跟踪的延伸占用结束，展示 until 对后继任务的影响。
+    assignee: 软件工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-watch]
+    labels: [场景演示, 前置依赖]
+    allow_rest_day_work: false
+  - uid: demo-long
+    order: 56
+    name: 长周期硬件验证
+    description: 预计工作时间超过抽样检查的开始时间，因此按预计工作时间决定任务条长度。
+    assignee: 硬件工程师
+    status: 进行中
+    earliest_start: { date: 2026-03-24, period: am }
+    latest_finish: null
+    duration_days: 5
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    until: [demo-sampling]
+    labels: [场景演示, until]
+    allow_rest_day_work: false
+  - uid: demo-sampling
+    order: 57
+    name: 阶段抽样检查
+    description: 在长周期硬件验证尚未结束时开始，展示 until 关系允许跨执行人重叠。
+    assignee: 测试工程师
+    status: 验收中
+    earliest_start: { date: 2026-03-25, period: am }
+    latest_finish: null
+    duration_days: 0.5
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 验收]
+    allow_rest_day_work: false
+  - uid: demo-parallel-code
+    order: 58
+    name: 并行实现补丁
+    description: 与设计变更跟踪及记录整理使用同一执行人且时间重叠，触发并行警告。
+    assignee: 软件工程师
+    status: 进行中
+    earliest_start: { date: 2026-03-26, period: am }
+    latest_finish: null
+    duration_days: 2
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 并行]
+    allow_rest_day_work: false
+  - uid: demo-parallel-notes
+    order: 59
+    name: 并行记录整理
+    description: 与并行实现补丁共用软件工程师且时间重叠，展示多个任务同时告警。
+    assignee: 软件工程师
+    status: 已完成
+    earliest_start: { date: 2026-03-26, period: pm }
+    latest_finish: null
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 并行]
+    allow_rest_day_work: false
+  - uid: demo-integration
+    order: 60
+    name: 双线结果汇合
+    description: 同时等待设计变更评审和阶段抽样检查，展示多个前置依赖。
+    assignee: 质量工程师
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-review, demo-sampling]
+    labels: [场景演示, 前置依赖]
+    allow_rest_day_work: false
+  - uid: demo-late-work
+    order: 61
+    name: 延期功能回归
+    description: 仅预计工期就超过最迟完成时间，展示与 until 无关的超期警告。
+    assignee: 测试工程师
+    status: 未开始
+    earliest_start: { date: 2026-03-30, period: am }
+    latest_finish: { date: 2026-03-30, period: pm }
+    duration_days: 2
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 超期]
+    allow_rest_day_work: false
+  - uid: demo-weekend
+    order: 62
+    name: 周末现场复核
+    description: 允许休息日工作，从周六开始消耗一天工期。
+    assignee: 生产工程师
+    status: 已完成
+    earliest_start: { date: 2026-03-28, period: am }
+    latest_finish: null
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 休息日]
+    allow_rest_day_work: true
+  - uid: demo-on-time
+    order: 63
+    name: 准时产品确认
+    description: 有最迟完成时间，但实际排期未超期且不与同执行人任务重叠，便于对比告警。
+    assignee: 产品经理
+    status: 已完成
+    earliest_start: { date: 2026-03-25, period: am }
+    latest_finish: { date: 2026-03-26, period: pm }
+    duration_days: 0.5
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-kickoff]
+    labels: [场景演示, 截止时间]
+    allow_rest_day_work: false
+  - uid: demo-final
+    order: 64
+    name: 演示结果归档
+    description: 汇合延伸占用后的任务、多前置汇合及延期回归，结束演示流程。
+    assignee: 产品经理
+    status: 未开始
+    earliest_start: null
+    latest_finish: null
+    duration_days: 1
+    parent_uid: demo-root
+    collapse_children: false
+    dependencies: [demo-after-watch, demo-integration, demo-late-work]
+    labels: [场景演示, 交付]
+    allow_rest_day_work: false

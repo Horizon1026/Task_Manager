@@ -35,3 +35,5 @@ html[data-theme="dark"] .caption,html[data-theme="dark"] .footer,html[data-theme
 .details.hover-preview{pointer-events:none}.details.hover-preview.scrollable{pointer-events:auto}
 
 .hover-card-content{display:flow-root}
+
+.bar .until-tail{position:absolute;right:0;top:0;bottom:0;max-width:100%;background:repeating-linear-gradient(135deg,#e09b3d66 0 5px,#fff3d544 5px 10px);border-left:1px dashed #a36b1f;pointer-events:none}.bar>span:not(.until-tail){position:relative;z-index:1}.edge.until{stroke:#ba791d;stroke-dasharray:3 3}.edge.until.related{stroke:#ba791d}

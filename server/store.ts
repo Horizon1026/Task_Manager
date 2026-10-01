@@ -55,6 +55,7 @@ export class ProjectStore {
       const original = await this.current(revision);
       // An initial snapshot makes the first save reversible as well.
       if (!(await this.list()).length) await this.backup(original, 'initial');
+      else await this.backup(original, 'before-save');
       const content = stringify(project, { lineWidth: 0 });
       await this.replace(content, revision);
       let backup: string | null = null, warning: string | null = null;

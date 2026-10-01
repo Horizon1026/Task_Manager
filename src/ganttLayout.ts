@@ -79,10 +79,11 @@ export function displayDependencyEdges(project: Project, visibleUids: Set<string
   for (const edge of edges) {
     const from = visibleEndpoint(edge.from), to = visibleEndpoint(edge.to);
     if (!from || !to || from === to) continue;
-    const key = `${from}\0${to}`;
+    const key = `${from}\0${to}${edge.kind === 'until' ? '\0until' : ''}`;
     const existing = indexByPair.get(key);
     if (existing === undefined) { indexByPair.set(key, result.length); result.push({ from, to, kind: edge.kind }); }
     else if (edge.kind === 'explicit') result[existing] = { from, to, kind: 'explicit' };
+    else if (edge.kind === 'until' && result[existing].kind === 'assignee') result[existing] = { from, to, kind: 'until' };
   }
   return result;
 }

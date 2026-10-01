@@ -20,11 +20,11 @@ export function GanttDependencyLayer({ edges, schedule, itemsByUid, activeUid, w
       const fromItem = itemsByUid.get(edge.from), toItem = itemsByUid.get(edge.to);
       if (!fromSchedule || !toSchedule || !fromItem || !toItem) return null;
       const curve = dependencyCurve(
-        { x: slotToX(fromSchedule.end), y: fromItem.top + GANTT_SIZING.rowHeight / 2 },
+        { x: slotToX(edge.kind === 'until' ? Math.min(fromSchedule.workEnd ?? fromSchedule.end, toSchedule.start) : fromSchedule.end), y: fromItem.top + GANTT_SIZING.rowHeight / 2 },
         { x: slotToX(toSchedule.start), y: toItem.top + GANTT_SIZING.rowHeight / 2 },
       );
-      const kindClass = edge.kind === 'assignee' ? 'assignee-dependency' : 'explicit-dependency';
-      return <g key={`${edge.from}-${edge.to}`}>
+      const kindClass = edge.kind === 'assignee' ? 'assignee-dependency' : edge.kind === 'until' ? 'until-dependency' : 'explicit-dependency';
+      return <g key={`${edge.from}-${edge.to}-${edge.kind}`}>
         <path className={`dependency-arrow ${kindClass}`} d={curve.path} />
         <line className={`dependency-arrowhead ${kindClass}`} x1={curve.arrowStart.x} y1={curve.arrowStart.y} x2={curve.arrowEnd.x} y2={curve.arrowEnd.y} markerEnd="url(#arrow)" />
       </g>;

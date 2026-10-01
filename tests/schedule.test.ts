@@ -226,3 +226,48 @@ test('seven time scales align natural calendar boundaries', () => {
   const cols = timeColumns(dayNumber('2026-02-01'), dayNumber('2026-03-01'), 'half-month');
   assert.deepEqual(cols.map(c => c.end - c.start), [15, 13]);
 });
+
+
+test('until extends occupied end to target start and delays successors and deadline', () => {
+  const p = project([
+    task('a', { duration_days: 0.5, until: ['b'], latest_finish: { date: '2026-09-14', period: 'pm' } }),
+    task('b', { earliest_start: { date: '2026-09-16', period: 'am' } }),
+    task('c', { dependencies: ['a'] }),
+  ]);
+  const schedule = scheduleProject(p);
+  assert.equal(schedule.get('a')!.workEnd, toSlot({ date: '2026-09-14', period: 'pm' }));
+  assert.equal(schedule.get('a')!.end, schedule.get('b')!.start);
+  assert.equal(schedule.get('c')!.start, schedule.get('a')!.end);
+  assert.equal(schedule.get('a')!.late, true);
+});
+
+test('until keeps longer work and serializes the same assignee through the target start', () => {
+  const p = project([
+    task('a', { duration_days: 3, until: ['b'] }),
+    task('b', { earliest_start: { date: '2026-09-15', period: 'am' } }),
+  ]);
+  const parallel = scheduleProject(p);
+  assert.equal(parallel.get('a')!.end, parallel.get('a')!.workEnd);
+  assert.ok(parallel.get('b')!.start < parallel.get('a')!.end);
+  p.project.allow_assignee_parallel_tasks = false;
+  const serial = scheduleProject(p);
+  assert.equal(serial.get('b')!.start, serial.get('a')!.end);
+});
+
+test('until rejects a positive scheduling cycle through a successor', () => {
+  const p = project([task('a', { until: ['b'] }), task('c', { dependencies: ['a'] }), task('b', { dependencies: ['c'] })]);
+  assert.throws(() => scheduleProject(p), /until.*冲突/);
+});
+
+
+test('same-assignee until reserves the target before other ready work', () => {
+  const p = project([
+    task('a', { until: ['b'] }),
+    task('c'),
+    task('b', { earliest_start: { date: '2026-09-16', period: 'am' } }),
+  ]);
+  p.project.allow_assignee_parallel_tasks = false;
+  const plan = scheduleProject(p);
+  assert.equal(plan.get('a')!.end, plan.get('b')!.start);
+  assert.equal(plan.get('c')!.start, plan.get('b')!.end);
+});

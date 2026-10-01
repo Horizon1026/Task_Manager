@@ -1,0 +1,624 @@
+version: 1
+project:
+  name: Godot Gear War 模块依赖图（静态代码与场景引用）
+  start_date: '2026-10-01'
+  default_scale: day
+  theme: dark
+  default_filter:
+    labels: []
+    mode: or
+  allow_assignee_parallel_tasks: true
+  assignees:
+  - 未指定
+calendar:
+  years: []
+  overrides: []
+tasks:
+- uid: grp-contracts
+  order: 1
+  name: Shared Contracts：跨运行时契约
+  description: 目录分组：shared_contracts。叶子节点按静态 GDScript 依赖聚合；箭头表示代码依赖，不代表开发顺序。日期与半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-contracts
+  order: 2
+  name: Shared Contracts：战斗端口与命令
+  description: 包含 5 个脚本、场景或资源文件：shared_contracts/commands/spawn_wave_request.gd, shared_contracts/ports/battle_dispatch_port.gd,
+    shared_contracts/ports/battle_runtime_session_port.gd, shared_contracts/responses/battle_session_capability_snapshot.gd,
+    shared_contracts/responses/spawn_wave_response.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-contracts
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - contracts
+  allow_rest_day_work: true
+- uid: grp-resource
+  order: 3
+  name: Resource Runtime：经济、建造与主界面
+  description: 目录分组：resource_runtime。叶子节点按静态 GDScript 依赖聚合；箭头表示代码依赖，不代表开发顺序。日期与半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-resource-app
+  order: 4
+  name: Resource App：游戏根节点
+  description: 包含 2 个脚本、场景或资源文件：resource_runtime/scenes/game_root.tscn, resource_runtime/scripts/game_root.gd. 箭头综合 GDScript
+    class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。 project.godot 将 game_root.tscn 设为主场景。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-contracts
+  - mod-resource-core
+  - mod-resource-economy
+  - mod-resource-gear
+  - mod-resource-input
+  - mod-resource-integration
+  - mod-resource-inventory
+  - mod-resource-presentation
+  - mod-resource-prototype-battle
+  - mod-resource-shop
+  - mod-resource-skill
+  - mod-resource-training
+  - mod-resource-waves
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-core
+  order: 5
+  name: Resource Core：配置、建筑、采集与界面耦合区
+  description: 包含 87 个脚本、场景或资源文件：resource_runtime/scenes/board/board_visual.tscn, resource_runtime/scenes/board/power_gear_view.tscn,
+    resource_runtime/scenes/buildings/building_gear_view.tscn, resource_runtime/scenes/resource/resource_node_view.tscn, resource_runtime/scenes/ui/backpack_panel.tscn,
+    resource_runtime/scenes/ui/backpack_slot_view.tscn, resource_runtime/scenes/ui/barracks_order_card.tscn, resource_runtime/scenes/ui/barracks_recipe_card.tscn,
+    resource_runtime/scenes/ui/barracks_training_panel.tscn, resource_runtime/scenes/ui/battle_wave_status_view.tscn, resource_runtime/scenes/ui/big_progress_bar.tscn,
+    resource_runtime/scenes/ui/header_view.tscn, resource_runtime/scenes/ui/load_reducer_detail_panel.tscn, resource_runtime/scenes/ui/mining_gear_detail_panel.tscn,
+    resource_runtime/scenes/ui/overlay/failure_modal.tscn, resource_runtime/scenes/ui/overlay/merge_modal.tscn, resource_runtime/scenes/ui/overlay/overlay_action_visual.tscn,
+    resource_runtime/scenes/ui/overlay/overlay_view.tscn, resource_runtime/scenes/ui/overlay/paper_panel.tscn, resource_runtime/scenes/ui/overlay/pause_modal.tscn,
+    resource_runtime/scenes/ui/overlay/victory_modal.tscn, resource_runtime/scenes/ui/power_gear_upgrade_panel.tscn, resource_runtime/scenes/ui/resource_readout.tscn,
+    resource_runtime/scenes/ui/shop_item_card.tscn, resource_runtime/scenes/ui/shop_panel.tscn, resource_runtime/scenes/ui/side_status_panel.tscn,
+    resource_runtime/scenes/ui/skill_gear_detail_panel.tscn, resource_runtime/scripts/building/building_definition.gd, resource_runtime/scripts/building/building_instance.gd,
+    resource_runtime/scripts/building/building_placement_service.gd, resource_runtime/scripts/building/building_production_service.gd,
+    resource_runtime/scripts/building/production_plan.gd, resource_runtime/scripts/common/building_utils.gd, resource_runtime/scripts/common/resource_amount.gd,
+    resource_runtime/scripts/config/building_catalog.gd, resource_runtime/scripts/config/building_catalog_repository.gd, resource_runtime/scripts/config/building_ids.gd,
+    resource_runtime/scripts/config/game_constants.gd, resource_runtime/scripts/config/game_resources.gd, resource_runtime/scripts/config/game_text.gd,
+    resource_runtime/scripts/config/input_actions.gd, resource_runtime/scripts/config/load_reducer_config_repository.gd, resource_runtime/scripts/config/power_gear_config_repository.gd,
+    resource_runtime/scripts/config/resource_mining_config_repository.gd, resource_runtime/scripts/config/runtime_config_manifest_repository.gd,
+    resource_runtime/scripts/config/shop_config_repository.gd, resource_runtime/scripts/config/skill_gear_config_repository.gd,
+    resource_runtime/scripts/config/training_config_repository.gd, resource_runtime/scripts/config/ui_layout.gd, resource_runtime/scripts/resource/mining_gear_state.gd,
+    resource_runtime/scripts/resource/resource_mining_system.gd, resource_runtime/scripts/resource/resource_node.gd, resource_runtime/scripts/ui/backpack_panel.gd,
+    resource_runtime/scripts/ui/backpack_slot_view.gd, resource_runtime/scripts/ui/barracks_order_card.gd, resource_runtime/scripts/ui/barracks_recipe_card.gd,
+    resource_runtime/scripts/ui/barracks_training_panel.gd, resource_runtime/scripts/ui/battle_wave_status_view.gd, resource_runtime/scripts/ui/big_progress_bar.gd,
+    resource_runtime/scripts/ui/board_renderer.gd, resource_runtime/scripts/ui/board_visual.gd, resource_runtime/scripts/ui/building_gear_view.gd,
+    resource_runtime/scripts/ui/building_view_registry.gd, resource_runtime/scripts/ui/developer_test_tool.gd, resource_runtime/scripts/ui/gear_visual_math.gd,
+    resource_runtime/scripts/ui/header_view.gd, resource_runtime/scripts/ui/hud_renderer.gd, resource_runtime/scripts/ui/load_reducer_detail_panel.gd,
+    resource_runtime/scripts/ui/mining_gear_detail_panel.gd, resource_runtime/scripts/ui/overlay/merge_modal.gd, resource_runtime/scripts/ui/overlay/outcome_modal.gd,
+    resource_runtime/scripts/ui/overlay/overlay_action_visual.gd, resource_runtime/scripts/ui/overlay/overlay_view.gd, resource_runtime/scripts/ui/overlay/paper_panel.gd,
+    resource_runtime/scripts/ui/overlay/pause_modal.gd, resource_runtime/scripts/ui/power_gear_upgrade_panel.gd, resource_runtime/scripts/ui/power_gear_view.gd,
+    resource_runtime/scripts/ui/production_status_adapter.gd, resource_runtime/scripts/ui/resource_node_view.gd, resource_runtime/scripts/ui/resource_node_view_registry.gd,
+    resource_runtime/scripts/ui/resource_readout.gd, resource_runtime/scripts/ui/shop_item_card.gd, resource_runtime/scripts/ui/shop_panel.gd,
+    resource_runtime/scripts/ui/shop_status_adapter.gd, resource_runtime/scripts/ui/side_status_panel.gd, resource_runtime/scripts/ui/skill_gear_detail_panel.gd,
+    resource_runtime/scripts/ui/training_status_adapter.gd. 内部静态引用成环，合并子域：resource_building, resource_common, resource_config,
+    resource_resource, resource_ui. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-prototype-battle
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-economy
+  order: 6
+  name: Resource Economy：经济状态
+  description: 包含 1 个脚本、场景或资源文件：resource_runtime/scripts/economy/economy_state.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-gear
+  order: 7
+  name: Resource Gear：齿轮网络
+  description: 包含 2 个脚本、场景或资源文件：resource_runtime/scripts/gear/gear_network.gd, resource_runtime/scripts/gear/gear_transmission_result.gd.
+    箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-input
+  order: 8
+  name: Resource Input：棋盘交互
+  description: 包含 1 个脚本、场景或资源文件：resource_runtime/scripts/input/board_interaction_state.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-integration
+  order: 9
+  name: Resource Integration：真实战斗适配
+  description: 包含 4 个脚本、场景或资源文件：resource_runtime/scenes/battle/battle_host.tscn, resource_runtime/scripts/integration/battle/battle_host.gd,
+    resource_runtime/scripts/integration/battle/real_battle_runtime_adapter.gd, resource_runtime/scripts/integration/battle/unit_mapping_repository.gd.
+    箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-battle-core
+  - mod-contracts
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-inventory
+  order: 10
+  name: Resource Inventory：背包状态
+  description: 包含 1 个脚本、场景或资源文件：resource_runtime/scripts/inventory/backpack_state.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-presentation
+  order: 11
+  name: Resource Presentation：战斗展示状态
+  description: 包含 1 个脚本、场景或资源文件：resource_runtime/scripts/presentation/battle_presentation_state.gd. 箭头综合 GDScript class_name
+    引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-prototype-battle
+  order: 12
+  name: Resource Prototype Battle：原型战斗规则
+  description: 包含 3 个脚本、场景或资源文件：resource_runtime/scripts/prototype_battle/battle_rules.gd, resource_runtime/scripts/prototype_battle/battle_system.gd,
+    resource_runtime/scripts/prototype_battle/battle_unit.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON
+    与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-shop
+  order: 13
+  name: Resource Shop：商店
+  description: 包含 4 个脚本、场景或资源文件：resource_runtime/scripts/shop/shop_item_labels.gd, resource_runtime/scripts/shop/shop_refresh_order.gd,
+    resource_runtime/scripts/shop/shop_service.gd, resource_runtime/scripts/shop/shop_state.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-skill
+  order: 14
+  name: Resource Skill：技能齿轮
+  description: 包含 4 个脚本、场景或资源文件：resource_runtime/scripts/skill/skill_cast_port.gd, resource_runtime/scripts/skill/skill_cast_result.gd,
+    resource_runtime/scripts/skill/skill_gear_state.gd, resource_runtime/scripts/skill/skill_gear_system.gd. 箭头综合 GDScript
+    class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-training
+  order: 15
+  name: Resource Training：兵营训练
+  description: 包含 8 个脚本、场景或资源文件：resource_runtime/scripts/training/barracks_training_coordinator.gd, resource_runtime/scripts/training/barracks_training_state.gd,
+    resource_runtime/scripts/training/log_training_completion_sink.gd, resource_runtime/scripts/training/training_completion_event.gd,
+    resource_runtime/scripts/training/training_completion_sink.gd, resource_runtime/scripts/training/training_id_generator.gd,
+    resource_runtime/scripts/training/training_order.gd, resource_runtime/scripts/training/training_session_id.gd. 箭头综合 GDScript
+    class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: mod-resource-waves
+  order: 16
+  name: Resource Waves：敌军波次
+  description: 包含 1 个脚本、场景或资源文件：resource_runtime/scripts/waves/enemy_wave_producer.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-resource
+  collapse_children: false
+  dependencies:
+  - mod-contracts
+  - mod-resource-core
+  - mod-resource-prototype-battle
+  labels:
+  - 模块
+  - resource
+  allow_rest_day_work: true
+- uid: grp-battle
+  order: 17
+  name: Battle Runtime：角色、战斗与导航
+  description: 目录分组：battle_runtime。叶子节点按静态 GDScript 依赖聚合；箭头表示代码依赖，不代表开发顺序。日期与半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-battle-buff-effects
+  order: 18
+  name: Battle Buffs：增益效果实现
+  description: 包含 6 个脚本、场景或资源文件：battle_runtime/scenes/buff_effects/charactor_poisoned_effect.tscn, battle_runtime/scenes/buff_effects/knight_monk_heal_effect.tscn,
+    battle_runtime/scenes/buff_effects/knight_warrior_guard_effect.tscn, battle_runtime/scripts/buff_effects/monk_heal_buff_effect.gd,
+    battle_runtime/scripts/buff_effects/poison_buff_effect.gd, battle_runtime/scripts/buff_effects/warrior_guard_buff_effect.gd.
+    箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-battle
+  collapse_children: false
+  dependencies:
+  - mod-battle-core
+  labels:
+  - 模块
+  - battle
+  allow_rest_day_work: true
+- uid: mod-battle-camera
+  order: 19
+  name: Battle Camera：边缘滚屏
+  description: 包含 1 个脚本、场景或资源文件：battle_runtime/scripts/modules/camera/camera_edge_scroll_system.gd. 箭头综合 GDScript class_name
+    引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-battle
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - battle
+  allow_rest_day_work: true
+- uid: mod-battle-core
+  order: 20
+  name: Battle Core：角色、战斗、导航与编排耦合区
+  description: 包含 82 个脚本、场景或资源文件：battle_runtime/resources/combat/archer_combat_profile.tres, battle_runtime/resources/combat/barrel_combat_profile.tres,
+    battle_runtime/resources/combat/monk_combat_profile.tres, battle_runtime/resources/combat/tnt_combat_profile.tres, battle_runtime/resources/combat/warrior_combat_profile.tres,
+    battle_runtime/scenes/battle_map.tscn, battle_runtime/scenes/battle_root.tscn, battle_runtime/scenes/buildings/barracks.tscn,
+    battle_runtime/scenes/charactors/goblin_barrel.tscn, battle_runtime/scenes/charactors/goblin_tnt.tscn, battle_runtime/scenes/charactors/goblin_torch.tscn,
+    battle_runtime/scenes/charactors/knight_archer.tscn, battle_runtime/scenes/charactors/knight_lancer.tscn, battle_runtime/scenes/charactors/knight_monk.tscn,
+    battle_runtime/scenes/charactors/knight_pawn_axe.tscn, battle_runtime/scenes/charactors/knight_pawn_hammer.tscn, battle_runtime/scenes/charactors/knight_pawn_knife.tscn,
+    battle_runtime/scenes/charactors/knight_warrior.tscn, battle_runtime/scenes/charactors/legacy/old_knight_archer.tscn,
+    battle_runtime/scenes/charactors/legacy/old_knight_pawn.tscn, battle_runtime/scenes/charactors/legacy/old_knight_warrior.tscn,
+    battle_runtime/scenes/projectiles/fire_on_groud_projectile.tscn, battle_runtime/scenes/projectiles/goblin_barrel_explosion_projectile.tscn,
+    battle_runtime/scenes/projectiles/goblin_tnt_explosion_projectile.tscn, battle_runtime/scenes/projectiles/goblin_tnt_projectile.tscn,
+    battle_runtime/scenes/projectiles/knight_archer_arrow_projectile.tscn, battle_runtime/scenes/projectiles/round_light_burst_projectile.tscn,
+    battle_runtime/scenes/projectiles/spell_poison_explosion_projectile.tscn, battle_runtime/scripts/battle_director.gd, battle_runtime/scripts/battle_root.gd,
+    battle_runtime/scripts/battle_runtime_scope.gd, battle_runtime/scripts/battle_unit_resolver.gd, battle_runtime/scripts/battle_wave_enqueue_result.gd,
+    battle_runtime/scripts/battle_wave_service.gd, battle_runtime/scripts/buildings/barracks.gd, battle_runtime/scripts/config/barracks_config_repository.gd,
+    battle_runtime/scripts/config/battle_config_file_loader.gd, battle_runtime/scripts/config/character_config_repository.gd,
+    battle_runtime/scripts/config/combat_effect_config_validator.gd, battle_runtime/scripts/config/combat_profile_config_repository.gd,
+    battle_runtime/scripts/config/mouse_projectile_hotkey_config_repository.gd, battle_runtime/scripts/modules/basic_charactor/basic_charactor.gd,
+    battle_runtime/scripts/modules/basic_charactor/buff_definition.gd, battle_runtime/scripts/modules/basic_charactor/buff_effect.gd,
+    battle_runtime/scripts/modules/basic_charactor/buff_system.gd, battle_runtime/scripts/modules/basic_charactor/combat_system.gd,
+    battle_runtime/scripts/modules/basic_charactor/ctrl_system.gd, battle_runtime/scripts/modules/basic_charactor/engagement_system.gd,
+    battle_runtime/scripts/modules/basic_charactor/mission.gd, battle_runtime/scripts/modules/basic_charactor/mission_system.gd,
+    battle_runtime/scripts/modules/basic_charactor/status_system.gd, battle_runtime/scripts/modules/basic_charactor/view_system.gd,
+    battle_runtime/scripts/modules/combat/attack_step_definition.gd, battle_runtime/scripts/modules/combat/attack_trigger_definition.gd,
+    battle_runtime/scripts/modules/combat/combat_effect_definition.gd, battle_runtime/scripts/modules/combat/combat_perf.gd,
+    battle_runtime/scripts/modules/combat/combat_profile.gd, battle_runtime/scripts/modules/combat/combat_target.gd, battle_runtime/scripts/modules/combat/combat_world.gd,
+    battle_runtime/scripts/modules/combat/damage_context.gd, battle_runtime/scripts/modules/combat/damage_request.gd, battle_runtime/scripts/modules/combat/damage_system.gd,
+    battle_runtime/scripts/modules/combat/map_combat_source.gd, battle_runtime/scripts/modules/combat/projectile_visual.gd,
+    battle_runtime/scripts/modules/combat/skill_cast_condition_system.gd, battle_runtime/scripts/modules/combat/skill_definition.gd,
+    battle_runtime/scripts/modules/combat/skill_effect_definition.gd, battle_runtime/scripts/modules/command/mouse_projectile_hotkey_system.gd,
+    battle_runtime/scripts/modules/command/player_command_system.gd, battle_runtime/scripts/modules/crowd_navigation/crowd_navigation_command.gd,
+    battle_runtime/scripts/modules/crowd_navigation/crowd_navigation_system.gd, battle_runtime/scripts/modules/crowd_navigation/flow_field/flow_field_grid.gd,
+    battle_runtime/scripts/modules/crowd_navigation/flow_field/flow_field_map_source.gd, battle_runtime/scripts/modules/crowd_navigation/flow_field/navigation_polygon_flow_field_source.gd,
+    battle_runtime/scripts/modules/crowd_navigation/flow_field/tile_map_layer_flow_field_source.gd, battle_runtime/scripts/modules/crowd_navigation/spatial_hash_grid.gd,
+    battle_runtime/scripts/modules/faction_visuals.gd, battle_runtime/scripts/modules/object_pool.gd, battle_runtime/scripts/modules/selection/selection_spatial_hash.gd,
+    battle_runtime/scripts/modules/selection/selection_system.gd, battle_runtime/scripts/modules/targeting/targeting_system.gd,
+    battle_runtime/tilesets/tiny_swords.tres. 内部静态引用成环，合并子域：battle_basic_charactor, battle_buildings, battle_combat, battle_command,
+    battle_common, battle_config, battle_crowd_navigation, battle_orchestration, battle_selection, battle_targeting. 箭头综合
+    GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-battle
+  collapse_children: false
+  dependencies:
+  - mod-battle-camera
+  - mod-battle-ui
+  - mod-contracts
+  labels:
+  - 模块
+  - battle
+  allow_rest_day_work: true
+- uid: mod-battle-debug
+  order: 21
+  name: Battle Debug：调试场景
+  description: 包含 6 个脚本、场景或资源文件：battle_runtime/scenes/debug/charactors/test_charactor_binary_dir.tscn, battle_runtime/scenes/debug/charactors/test_charactor_eight_dir.tscn,
+    battle_runtime/scenes/debug/charactors/test_charactor_orc.tscn, battle_runtime/scenes/debug/charactors/test_charactor_quad_dir.tscn,
+    battle_runtime/scenes/debug/test_map.tscn, battle_runtime/scenes/debug/test_tile_map.tscn. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-battle
+  collapse_children: false
+  dependencies:
+  - mod-battle-camera
+  - mod-battle-core
+  labels:
+  - 模块
+  - battle
+  allow_rest_day_work: true
+- uid: mod-battle-ui
+  order: 22
+  name: Battle UI：状态显示
+  description: 包含 2 个脚本、场景或资源文件：battle_runtime/scenes/ui/status_bar.tscn, battle_runtime/scripts/ui/status_bar.gd. 箭头综合 GDScript
+    class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-battle
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - battle
+  allow_rest_day_work: true
+- uid: grp-tests
+  order: 23
+  name: Tests：运行时验证
+  description: 目录分组：tests。叶子节点按静态 GDScript 依赖聚合；箭头表示代码依赖，不代表开发顺序。日期与半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-battle-tests
+  order: 24
+  name: Battle Tests：战斗端测试
+  description: 包含 1 个脚本、场景或资源文件：battle_runtime/tests/run_all_tests.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的
+    JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-tests
+  collapse_children: false
+  dependencies:
+  - mod-battle-buff-effects
+  - mod-battle-camera
+  - mod-battle-core
+  - mod-battle-debug
+  - mod-battle-ui
+  - mod-contracts
+  labels:
+  - 模块
+  - tests
+  allow_rest_day_work: true
+- uid: mod-resource-tests
+  order: 25
+  name: Resource Tests：资源端测试
+  description: 包含 20 个脚本、场景或资源文件：resource_runtime/tests/fakes/controlled_battle_runtime.gd, resource_runtime/tests/run_all_tests.gd,
+    resource_runtime/tests/suites/resource_backpack_state_foundation_suite.gd, resource_runtime/tests/suites/resource_barracks_training_orders_presentation_suite.gd,
+    resource_runtime/tests/suites/resource_battle_rules_foundation_suite.gd, resource_runtime/tests/suites/resource_board_interaction_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_building_foundation_suite.gd, resource_runtime/tests/suites/resource_developer_test_tool_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_economy_foundation_suite.gd, resource_runtime/tests/suites/resource_enemy_wave_producer_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_gear_visual_foundation_suite.gd, resource_runtime/tests/suites/resource_hud_renderer_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_layout_contract_suite.gd, resource_runtime/tests/suites/resource_load_reducer_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_mining_system_foundation_suite.gd, resource_runtime/tests/suites/resource_runtime_config_pipeline_suite.gd,
+    resource_runtime/tests/suites/resource_shared_unit_mapping_contract_suite.gd, resource_runtime/tests/suites/resource_shop_config_foundation_suite.gd,
+    resource_runtime/tests/suites/resource_shop_runtime_foundation_suite.gd, resource_runtime/tests/suites/resource_value_config_suite.gd.
+    箭头综合 GDScript class_name 引用以及脚本和场景中的静态 res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-tests
+  collapse_children: false
+  dependencies:
+  - mod-battle-camera
+  - mod-battle-core
+  - mod-contracts
+  - mod-resource-app
+  - mod-resource-core
+  - mod-resource-economy
+  - mod-resource-gear
+  - mod-resource-input
+  - mod-resource-integration
+  - mod-resource-inventory
+  - mod-resource-presentation
+  - mod-resource-prototype-battle
+  - mod-resource-shop
+  - mod-resource-skill
+  - mod-resource-training
+  - mod-resource-waves
+  labels:
+  - 模块
+  - tests
+  allow_rest_day_work: true
+- uid: grp-tools
+  order: 26
+  name: Tools：开发辅助工具
+  description: 目录分组：Tools。叶子节点按静态 GDScript 依赖聚合；箭头表示代码依赖，不代表开发顺序。日期与半天工期仅用于甘特图布局。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: null
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 目录
+  allow_rest_day_work: true
+- uid: mod-tools-assets
+  order: 27
+  name: Tools Assets：占位素材生成
+  description: 包含 1 个脚本、场景或资源文件：Tools/placeholder_assets/generate_placeholder_assets.gd. 箭头综合 GDScript class_name 引用以及脚本和场景中的静态
+    res:// 路径；图片、生成的 JSON 与动态调用不生成前置依赖。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-tools
+  collapse_children: false
+  dependencies:
+  - mod-resource-core
+  labels:
+  - 模块
+  - tools
+  allow_rest_day_work: true
+- uid: mod-tools-boundary-guard
+  order: 28
+  name: Tools Boundary Guard：模块边界检查
+  description: 包含 4 个 Python 文件：Tools/boundary_guard/dependency_guard.py, Tools/boundary_guard/ownership_guard.py, Tools/boundary_guard/tests/test_dependency_guard.py,
+    Tools/boundary_guard/tests/test_ownership_guard.py. 读取工程并检查模块归属与跨边界引用；它不被游戏运行时导入。
+  assignee: 未指定
+  status: 已完成
+  earliest_start: null
+  latest_finish: null
+  duration_days: 3
+  parent_uid: grp-tools
+  collapse_children: false
+  dependencies: []
+  labels:
+  - 模块
+  - tools
+  allow_rest_day_work: true

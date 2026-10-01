@@ -50,6 +50,7 @@
 :root[data-theme='dark'] .field-label,
 :root[data-theme='dark'] .field-note,
 :root[data-theme='dark'] .dependency-list small,
+:root[data-theme='dark'] .until-list small,
 :root[data-theme='dark'] .hover-card p,
 :root[data-theme='dark'] .hover-card dt,
 :root[data-theme='dark'] .hover-card small,
@@ -84,6 +85,7 @@
 :root[data-theme='dark'] .badge,
 :root[data-theme='dark'] .scale-switch,
 :root[data-theme='dark'] .dependency-list>div,
+:root[data-theme='dark'] .until-list>div,
 :root[data-theme='dark'] .computed{background:#2d2d2d;border-color:#4b4b4b;color:#d4d4d4}
 :root[data-theme='dark'] .scale-switch button{background:transparent;border-color:transparent}
 :root[data-theme='dark'] .scale-switch button.active,
@@ -159,14 +161,16 @@
 :root[data-theme='dark'] .text-button,
 :root[data-theme='dark'] .panel-heading > button,
 :root[data-theme='dark'] .notice button,
-:root[data-theme='dark'] .dependency-list button{background:transparent}
+:root[data-theme='dark'] .dependency-list button,
+:root[data-theme='dark'] .until-list button{background:transparent}
 :root[data-theme='dark'] .app-header nav button:hover:not(:disabled),
 :root[data-theme='dark'] .tree-task-cell .task-title:hover:not(:disabled),
 :root[data-theme='dark'] .row-order button:hover:not(:disabled),
 :root[data-theme='dark'] .text-button:hover:not(:disabled),
 :root[data-theme='dark'] .panel-heading > button:hover:not(:disabled),
 :root[data-theme='dark'] .notice button:hover:not(:disabled),
-:root[data-theme='dark'] .dependency-list button:hover:not(:disabled){background:transparent;color:#fff}
+:root[data-theme='dark'] .dependency-list button:hover:not(:disabled),
+:root[data-theme='dark'] .until-list button:hover:not(:disabled){background:transparent;color:#fff}
 
 /* Dependency lines stay crisp in light mode and stand out on dark tracks. */
 :root[data-theme='dark'] .tree-gantt-body .dependency-layer{color:#82e6ff}

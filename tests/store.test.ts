@@ -48,7 +48,21 @@ test('simultaneous stale saves cannot overwrite one another', async t => {
 test('saving unchanged content still produces a new backup', async t => {
   const store = await setup(t), base = await store.read();
   const first = await store.save(base.project, base.revision); await store.save(first.project, first.revision);
-  assert.equal((await store.list()).length, 3);
+  const names = await store.list();
+  assert.equal(names.length, 4);
+  const previous = names.find(name => name.includes('_before-save_'))!;
+  assert.equal(await readFile(join(store.backupDir, previous), 'utf8'), await readFile(store.file, 'utf8'));
+});
+test('each later save backs up the exact YAML that it replaces', async t => {
+  const store = await setup(t), base = await store.read();
+  base.project.tasks[0].name = 'first';
+  const first = await store.save(base.project, base.revision);
+  const previousYaml = await readFile(store.file, 'utf8');
+  first.project.tasks[0].name = 'second';
+  await store.save(first.project, first.revision);
+  const name = (await store.list()).find(value => value.includes('_before-save_'))!;
+  assert.equal(await readFile(join(store.backupDir, name), 'utf8'), previousYaml);
+  assert.equal((await store.read()).project.tasks[0].name, 'second');
 });
 test('invalid restore and path traversal cannot modify the project', async t => {
   const store = await setup(t), base = await store.read();
